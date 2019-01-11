@@ -1,10 +1,12 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.LoanBase;
+import com.example.demo.entity.ReportName;
 import com.example.demo.entity.TableRelation;
 import com.example.demo.mapper.OnloadMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ public class OnloadService {
 
     @Autowired
     OnloadMapper onloadMapper;
+
 
 
     /**
@@ -68,6 +71,8 @@ public class OnloadService {
         return str;
     }
 
+
+
     /**
      * 获取所有数据
      */
@@ -89,10 +94,12 @@ public class OnloadService {
 
             for(int i=0;i<listAll.size();i++){
                 String tab2=listAll.get(i).get("tableName").toString();
+                String showTable = listAll.get(i).get("showFieldMeans").toString();
                 Map<String ,Object> ooo=new HashMap<String ,Object>();
                 if(tab1.equals(tab2)){
                     //获得表名
                     ls.setTabName(tab2);
+                    ls.setShowName(showTable);
                     ooo.put("field",listAll.get(i).get("field"));
                     ooo.put("fieldMeans",listAll.get(i).get("fieldMeans"));
                     // System.out.println(listAll.get(i).get("field").toString());

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>修改报表</title>
+
+
+    <link rel="stylesheet" type="text/css" href="/css/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/icon.css"/>
+    <script type="text/javascript" src="/js/jquery-1.8.0.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/js/datagrid-dnd.js"></script>
+    <script th:inline="javascript" type="text/javascript">
+        //var datarow;
+        $(function () {
+            var id = $("#ipt").val();
+            //通过id获得数据集
+            $.ajax({
+                url:"/edit/getData?id="+id,
+                type:"get",
+                dataType:"json",
+                success:function(data){
+                   // datarow=data;
+                    $("#dg").datagrid("loadData", data.rows);  //动态取数据
+
+                }
+            })
+
+        })
+
+    </script>
+</head>
+<body>
+<div style="overflow: auto;">
+<div style="height:700px;width:1200px;overflow: auto;">
+
+        <div style="width:500px;float: left">
+            <h3>拖动查询字段顺序</h3>
+            <input type="hidden" th:value="${map.id}" id="ipt" />
+            <table class="easyui-datagrid" title="查询字段" style="height:500px;width:450px;overflow: auto" id="dg"
+                   data-options="
+                            singleSelect:true,
+                            onLoadSuccess:function(){
+                                $(this).datagrid('enableDnd');
+                            },
+                            rownumbers:true,
+                            rowStyler: function(index,row){
+                                if ((index % 2) == 0){
+                                    return 'background-color:#cfecff';
+                                }else{
+                                    return 'background-color:#d2dbff';
+                                }
+                             }
+                        ">
+                <thead>
+                <tr>
+                    <th data-options="field:'lable',width:110">别名</th>
+                    <th data-options="field:'field',width:250">字段名</th>
+                    <!--<th data-options="field:'listprice',width:80,align:'right'">List Price</th>
+                    <th data-options="field:'unitcost',width:80,align:'right'">Unit Cost</th>
+                    <th data-options="field:'attr1',width:250">Attribute</th>
+                    <th data-options="field:'status',width:60,align:'center'">Status</th>-->
+                </tr>
+                </thead>
+            </table>
+            <input type="button" name="aa" id="btn" value="保存修改" />
+        </div>
+
+
+</div>
+</div>
+</body>
+<script th:inline="javascript" type="text/javascript">
+
+    $(function(){
+        var fieldSql="";
+        var lableSql="";
+        var repNameId = $("#ipt").val();
+        $("#btn").bind("click",function(event){
+
+            //获取表格的数据
+            var data = $('#dg').datagrid('getRows');
+            //遍历每行
+            $.each(data, function(i ,row){
+               // alert(row.lable+"第"+(i+1)+"行");
+                lableSql += row.lable +",";
+                fieldSql += row.field +",";
+            });
+
+            $.ajax({
+                url:"/edit/sortTab",
+                data:{"repNameId":repNameId,"lableSql":lableSql,"fieldSql":fieldSql},
+                dataType:"text",
+                success:function(data){
+                    alert(data);
+                    //更新tab
+                    update(repNameId);
+                }
+            })
+
+            // alert("lable  "+lableSql );
+            // alert("field  "+fieldSql );
+            // alert("id     "+repNameId);
+        })
+
+
+    })
+    function update(id){
+        $.ajax({
+            url:"/edit/getData?id="+id,
+            type:"get",
+            dataType:"json",
+            success:function(data){
+                // datarow=data;
+                $("#dg").datagrid("loadData", data.rows);  //动态取数据
+
+            }
+        })
+    }
+</script>
+</html>

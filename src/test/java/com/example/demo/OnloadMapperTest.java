@@ -1,25 +1,23 @@
 package com.example.demo;
 
-import com.example.demo.entity.LoanBase;
-import com.example.demo.entity.TableRelation;
-import com.example.demo.mapper.OnloadMapper;
+import com.example.demo.commons.ExcelExportUtil;
+import com.example.demo.commons.FTPConfigBean;
+import com.example.demo.commons.FTPUtil;
 
-import com.google.gson.Gson;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.hive.HiveContext;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by TC20021 on 2018/12/11.
@@ -28,31 +26,59 @@ import java.util.stream.Collectors;
 @SpringBootTest
 public class OnloadMapperTest {
 
+
     @Autowired
-    OnloadMapper onloadMapper;
+    private FTPConfigBean ftpConfigBean;
 
     @Test
-    public void getLoanBase(){
+    public void getLoanBase() throws Exception{
 
-        String sqlname ="select loan_base_dsj.loan_state,overdue_detail_dsj.cur_date,person_info_dsj.name  from  \n" +
-                "loan_base_dsj left join  overdue_detail_dsj  on  loan_base_dsj.id = overdue_detail_dsj.loan_id  \n" +
-                "left join  person_info_dsj  on  loan_base_dsj.borrower_id = person_info_dsj.id ";
-        SparkConf conf = new SparkConf().setAppName("programdept").setMaster("spark://10.100.200.11:7077")
-                .setJars(new String[]{"D:\\datahouse\\demo.jar"});
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        HiveContext hiveContext = new HiveContext(sc.sc());
-        Gson gson = new Gson();
-
-        hiveContext.sql("use oracle_table");
-        DataFrame sql = hiveContext.sql(sqlname);
-        // DataFrame sql = hiveContext.sql("show tables");
-        List<Object> collect =
-                sql.collectAsList().stream().map(x->x.toString()).collect(Collectors.toList());
-        System.out.println(collect);
-        for(int i= 0;i < 5;i++){
-            System.out.println(collect.get(i));
+        List<Map<String, Object>> objs = new ArrayList<>();
+        Map<String, Object> map=new HashMap<>();
+        map.put("name","name");
+        map.put("age","age");
+        objs.add(map);
+        String[] labels={"姓名","年龄"};
+        String[] fields={"name","age"};
+        Workbook excel = ExcelExportUtil.createExcelByMap("报表.xlsx", labels, fields, objs, "报表", true);
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try {
+            excel.write(os);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        sc.close();
+        byte[] b = os.toByteArray();
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(b);
+
+
+
+
+
+        HashMap<String, String> map2 = new HashMap<>();
+        String ftp_ip = ftpConfigBean.getFTP_IP();
+        String ftp_port = ftpConfigBean.getFTP_PORT();
+        String ftp_filepath = ftpConfigBean.getFTP_FILEPATH();
+        String ftp_basepath = ftpConfigBean.getFTP_BASEPATH();
+        String ftp_username = ftpConfigBean.getFTP_USERNAME();
+        String ftp_password = ftpConfigBean.getFTP_PASSWORD();
+        map2.put("ip",ftp_ip);
+        map2.put("port",ftp_port);
+        map2.put("filepath",ftp_filepath);
+        map2.put("basepath",ftp_basepath);
+        map2.put("username",ftp_username);
+        map2.put("password",ftp_password);
+        String ftpFullPath;
+        String tabName = "王五";
+        //上传图片并返回图片新的名称
+        String imageNewname = FTPUtil.uploadFile(tabName, inputStream,map2);
+        //判断filepath是否是空路径
+        if (ftp_filepath.equals("/")) {
+            ftpFullPath = ftp_basepath + "/" + imageNewname;
+        }else{
+            ftpFullPath = ftp_basepath + "/" + ftp_filepath + "/" + imageNewname;
+        }
+        System.out.println(ftpFullPath);
+       // return ftpFullPath;
 
     }
 }

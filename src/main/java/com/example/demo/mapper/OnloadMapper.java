@@ -16,7 +16,7 @@ public interface OnloadMapper {
     /**
      * 表分组
      */
-    @Select("select table_name from rp_table_field group by table_name")
+    @Select("select table_name from rp_field_means group by table_name")
     @Results({
             @Result(property = "tableName", column = "table_name")
     })
@@ -25,7 +25,7 @@ public interface OnloadMapper {
     /**
      * 根据表名查询字段
      */
-    @Select("select field from rp_table_field where table_name = #{tabName} ")
+    @Select("select field from rp_field_means where table_name = #{tabName} ")
     List<Map<String , Object>> getList(@Param("tabName") String tabName);
 
 
@@ -54,13 +54,16 @@ public interface OnloadMapper {
 
 
 
+
+
     /**
      * 表分组
      */
-    @Select("select field,field_means,table_name from rp_field_means")
+    @Select("select field,field_means,table_name,show_field_means  from rp_field_means")
     @Results({
             @Result(property = "tableName", column = "table_name"),
-            @Result(property = "fieldMeans", column = "field_means")
+            @Result(property = "fieldMeans", column = "field_means"),
+            @Result(property = "showFieldMeans" ,column = "show_field_means")
     })
     List<Map<String , Object>> getAll();
 }

@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.commons.ExcelExportUtil;
 import com.example.demo.entity.LoanBase;
+import com.example.demo.service.AddToReportService;
 import com.example.demo.service.OnloadService;
 import com.example.demo.service.SparkTestService;
 import com.sun.org.apache.xpath.internal.operations.Mod;
@@ -32,18 +33,19 @@ public class IndexController {
     @Autowired
     OnloadService onloadService;
     @Autowired
-    private SparkTestService sparkTestService;
+    SparkTestService sparkTestService;
+    @Autowired
+    AddToReportService addToReportService;
 
     @RequestMapping(value = "/in" , method = RequestMethod.GET)
-    public String getOne(Model model){
+    public String getOne(){
 
-        return "index";
+        return "test";
     }
 
 
 
     @RequestMapping(value = "/det")
-
     public String getDatg(Model model){
         List<LoanBase> lbs = onloadService.getAll();
         model.addAttribute("lbs",lbs);
@@ -51,37 +53,83 @@ public class IndexController {
     }
 
 
+    @RequestMapping(value = "/downLoad")
+    public void getDown(HttpServletResponse response)throws Exception{
+        String[] labels ={"姓名","年龄","性别"};
+        String[] fields ={"name","age","sex"};
+        List<Map<String ,Object>> dataList = new ArrayList<>();
+
+        Map<String ,Object> m1=new HashMap<>();
+        m1.put("name","张三");
+        m1.put("age",17);
+        m1.put("name","男");
+        Map<String ,Object> m2=new HashMap<>();
+        m2.put("name","李四");
+        m2.put("age",19);
+        m2.put("name","女");
+        dataList.add(m1);
+        dataList.add(m2);
+
+        Workbook excel=ExcelExportUtil.createExcelByMap("报表.xlsx", labels, fields, dataList, "报表",true);
+
+        String fileName = "报表";
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        fileName += dateFormat.format(new Date()) + ".xlsx";
+        response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
+        response.setContentType("application/msexcel");
+        OutputStream out = response.getOutputStream();
+        excel.write(out);
+        out.flush();
+
+        if (out != null) {
+            try {
+                out.close();
+            } catch (IOException e) {
+
+            }
+            out = null;
+        }
+        if (excel != null) {
+            try {
+                excel.close();
+            } catch (IOException e) {
+
+            }
+            excel = null;
+        }
+       // return "0000";
+    }
+
+
+    /**
+     *获得自定义的报表名
+     *获得前台选中的字段和条件字段，
+     *添加到rp_report_name表中
+     *
+     *
+     *
+     * @throws Exception
+     */
     @RequestMapping(value = "/spit" ,method = RequestMethod.POST)
     @ResponseBody
-    public void getSpit( String str,String strtab,String strLabels,HttpServletResponse response) throws Exception {
+    public String getSpit( String str,String strtab,String strLabels,String strwhere,String reportname,String whereDetail,
+                           HttpServletResponse response) throws Exception {
 
-        String[] fields=str.split(",");
-        for(String s:fields){
-            System.out.print(s+"\t");
-        }
-        System.out.println("");
+        String suc = addToReportService.getReport(str,strtab,strLabels,strwhere,reportname,whereDetail);
+        return suc;
+    }
 
-        String[] tname = strtab.split(",");
-        for(String ss:tname){
-            System.out.print(ss+"\t");
-        }
-        System.out.println("");
 
-        String[] labels = strLabels.split(",");
-        for(String sss:labels){
-            System.out.print(sss+"\t");
-        }
-
-        String sql = onloadService.getSql(tname,fields);
-
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>");
-        System.out.println(sql);
-
-        List<Map<String,Object>> objs = sparkTestService.sparkDemo(sql,fields);
-
+    /**
+     * 导出报表
+     * @param
+     * @return
+     */
+    public void export(List<Map<String,Object>> dataList,HttpServletResponse response,String[] labels
+        ,String[] fields) throws Exception{
 
 /*****************************************************************************************/
-        Workbook excel=(Workbook)ExcelExportUtil.createExcelByMap("报表.xlsx", labels, fields, objs, "报表",true);
+      /*  Workbook excel=(Workbook)ExcelExportUtil.createExcelByMap("报表.xlsx", labels, fields, objs, "报表",true);
 
         String fileName = "报表";
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
@@ -111,18 +159,11 @@ public class IndexController {
             excel = null;
         }
        // export(objs,response,labels,fields);
-        //return obj.size()+"";
-       // return "000";
-    }
+        //return obj.size()+"";*/
 
 
-    /**
-     * 导出报表
-     * @param model
-     * @return
-     */
-    public void export(List<Map<String,Object>> dataList,HttpServletResponse response,String[] labels
-        ,String[] fields) throws Exception{
+
+
 
         Workbook excel=(Workbook)ExcelExportUtil.createExcelByMap("报表.xlsx", labels, fields, dataList, "报表",true);
 

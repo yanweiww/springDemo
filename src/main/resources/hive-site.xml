@@ -4,7 +4,7 @@
 <configuration>
   <property>
     <name>hive.metastore.uris</name>
-    <value>thrift://VM200-11:9083</value>
+    <value>thrift://VM250-240:9083</value>
   </property>
   <property>
     <name>hive.metastore.client.socket.timeout</name>
@@ -48,7 +48,7 @@
   </property>
   <property>
     <name>hive.exec.reducers.bytes.per.reducer</name>
-    <value>67108864</value>
+    <value>1073741824</value>
   </property>
   <property>
     <name>hive.exec.copyfile.maxsize</name>
@@ -84,7 +84,7 @@
   </property>
   <property>
     <name>hive.merge.mapredfiles</name>
-    <value>false</value>
+    <value>true</value>
   </property>
   <property>
     <name>hive.cbo.enable</name>
@@ -148,7 +148,7 @@
   </property>
   <property>
     <name>spark.executor.cores</name>
-    <value>2</value>
+    <value>4</value>
   </property>
   <property>
     <name>spark.yarn.driver.memoryOverhead</name>
@@ -184,7 +184,7 @@
   </property>
   <property>
     <name>hive.zookeeper.quorum</name>
-    <value>VM200-13,VM200-11,VM200-12</value>
+    <value>VM250-240,VM250-241,VM250-242</value>
   </property>
   <property>
     <name>hive.zookeeper.client.port</name>
@@ -212,7 +212,7 @@
   </property>
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:mysql://VM200-11:3306/hive?createDatabaseIfNotExist=true&amp;characterEncoding=UTF-8&amp;useSSL=false</value>
+    <value>jdbc:mysql://VM250-240:3306/hive?createDatabaseIfNotExist=true&amp;characterEncoding=UTF-8&amp;useSSL=false</value>
   </property>
   <property>
     <name>javax.jdo.option.ConnectionDriverName</name>

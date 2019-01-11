@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="/css/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="/css//icon.css" />
+    <link rel="stylesheet" type="text/css" href="/css/demo.css" />
+
+    <link rel="stylesheet" type="text/css" href="/css/layui.css"  />
+
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
+    <!--改变easyui的easyui-datebox日期展示格式-->
+    <script type="text/javascript" src="/js/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/js/jquery.fileDownload.js"></script>
+
+    <script type="text/javascript" src="/js/layui.js"></script>
+    <script type="text/javascript" src="/js/nicePage1.js"></script>
+
+
+    <style>
+        /*不给选中的行添加高亮*/
+        .datagrid-row-selected{
+            background: #FFFFF;/*自定义颜色*/
+        }
+    </style>
+
+</head>
+
+
+<body>
+<div class="easyui-panel" style="width: 100%;height:95%;"  >
+    <!--保存该表的id用于提交数据时候使用-->
+    <input type="hidden" id="hiddenId" th:value="${reportId}" />
+    <div id="tablecontent" class="easyui-panel" title="查询条件"  style="width: 95%;height:auto;padding-top: 5px;" >
+        <form id="conditionForm" style="width: 100%; height: 100%;">
+            <table style="height: 100%;border-spacing:10px;table-layout:fixed;">
+                <input type="hidden" th:value="${reportId}" id="aaa"/>
+                <tr>
+                    <td style="width:800px;text-align: left;padding-left: 20px;" th:each="allQueryField,queryStat:${allQueryFields}" th:if="${allQueryField.fieldType}=='text'">
+                        <span th:text="${allQueryField.showField}"></span>
+                        <input class="easyui-textbox" type="text"  name="whereFieldStrings" data-options="editable : true"  style="width: 250px;"/>
+                    </td>
+
+                    <td style="width:800px;text-align: left;" th:each="allQueryField,queryStat:${allQueryFields}" th:if="${allQueryField.fieldType}=='date'" >
+                        <span th:text="${allQueryField.showField}"></span>
+                        <!--此处日期暂时做等号相连，只取一个值-->
+                        <!--<input class="easyui-datebox" type="text"  th:name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/> ~-->
+                        <input class="easyui-datebox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/>
+                    </td>
+
+                    <td style="width:800px;text-align: left;" th:each="allQueryField,queryStat:${allQueryFields}" th:if="${allQueryField.fieldType}=='select'" >
+                        <span th:text="${allQueryField.showField}"></span>
+                        <input class="easyui-combobox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 250px;"/>
+                    </td>
+                </tr>
+            </table>
+            <div style="padding: 3px;" class="datagrid-toolbar">
+                <div id="bottonBox" style="margin-bottom: 0px">
+                    <!-- <a href="javascript:void(0)" format="html" class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true,formId:'#conditionForm'" style="width:60px">查询</a> -->
+                    <a href="javascript:void(0)" id="clearCondition" class="easyui-linkbutton" data-options="iconCls:'icon-clear',plain:true,formId:'#conditionForm'" style="width:80px;">重置</a>&nbsp;&nbsp;
+                    <a href="javascript:void(0)" id="exportForm" format="xlsx" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true,formId:'#conditionForm'" style="width:120px">导出</a>&nbsp;&nbsp;
+                    <a href="javascript:void(0)" id="look"  class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true,formId:'#conditionForm'" style="width:120px">预览</a>
+
+                </div>
+            </div>
+        </form>
+    </div>
+    <div style="width: 98%;height:1000px;overflow: auto">
+    <!--************************分页******************************-->
+        <div style="width: 95%;height:30%;padding-top: 20px;padding-left: 20px;overflow: auto">
+            <blockquote class="layui-elem-quote">对sql查询到的结果进行分页展示,数据量过大，只显示1000行数据</blockquote>
+            <!--以下为两个必须div元素-->
+            <div id="table" style="overflow: auto"></div>
+            <div id="pageBar"></div>
+        </div>
+
+    <!--******************************************************-->
+        <div style="margin:20px 0;height:250px;padding-top: 20px;padding-left: 20px;overflow: auto" id="ref">
+            <table id="dg" name="grantMoneyListDataGrid" class="easyui-datagrid" title="操作记录表"
+                   style="width: 100%;height:auto"
+                   data-options="fitColumns:true,
+                                 singleSelect:true,
+                                 rownumbers:true,
+                                 toolbar:toolbar,
+                                 rowStyler: function(index,row){
+                                        if ((index % 2) == 0){
+                                            return 'background-color:#cfecff';
+                                        }else{
+                                            return 'background-color:#d2dbff';
+                                        }
+                                 }
+                   ">
+                <thead>
+                    <th data-options="field:'id',width:80 ">查询编号</th>
+                    <th data-options="field:'state',width:100,formatter:stat">状态</th>
+                    <th data-options="field:'startTime',width:200">查询时间</th>
+                    <th data-options="field:'endTime',width:200">结束时间</th>
+                    <th data-options="field:'requestUrl',width:80 ,formatter:go">查看excel</th>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+
+<script th:inline="javascript" type="text/javascript">
+    $(function () {
+        $("#exportForm").click(function () {
+            //获取当前表的id
+            var reportId = $("#hiddenId").val();
+            //获取input里面的值
+            var aaa = $('form').serialize();
+            //序列化中文时之所以乱码是因为.serialize()调用了encodeURLComponent方法将数据编码了
+            //原因：.serialize()自动调用了encodeURIComponent方法将数据编码了
+            //解决方法：调用decodeURIComponent(XXX,true);将数据解码
+            var whereFields = decodeURIComponent(aaa,true); //关键点
+            console.log(whereFields);
+
+            var url = "/index/getQuerySql";
+            $.ajax({
+                url:url,
+                data:{"reportId":reportId,"whereFields":whereFields},
+                dataType:"text",
+                success:function(data){
+                   /* if(data=="0000"){
+                        alert("成功");
+
+                    }*/
+                 //  alert("出入主键为"+data);
+                    //调用刷新方法
+                    renovate();
+                }
+            })
+
+            //点击事件后延时刷新table
+            setTimeout(renovate,2000);
+            //alert("执行刷新方法")
+
+            /*  $.fileDownload(url,{
+                  httpMethod: 'POST',
+                  data:{"reportId":reportId,"whereFields":whereFields},
+                  prepareCallback:function(url){
+                      alert("下载开始，请稍等！");
+                      // common.layer.loading();
+                  },
+                  successCallback:function(url){
+
+                      alert('下载成功！');
+                  },
+                  failCallback: function (html, url) {
+                      alert("导出失败，未知的异常。");
+                  }
+              });*/
+
+        });
+
+
+    })
+</script>
+
+<!--加载预览数据栏-->
+<script th:inline="javascript" type="text/javascript">
+
+    var reportId =document.getElementById("aaa").value;
+    var nameList = ['日期', '日出时刻'] //table的列名
+    var widthList = [100,250] //table每列的宽度
+
+   var cc =aa(reportId);//从后台获de table 的列名,截取为字符串数组
+   var nameList = cc.split(",");//table的列名
+   var widthList=new Array(nameList.length);//列宽
+   for(i in widthList){
+       widthList[i] = 200;
+    }
+
+    var json = "";
+    //初始化table列名
+    function aa(reportId){
+        var bb="";
+        $.ajax({
+            url:"/index/getLable",
+            data:{"reportId":reportId},
+            async: false,
+            dataType:"text",
+            success:function(data){
+                bb=data;
+            }
+        })
+       // alert(bb);
+       return bb;
+    }
+    //通过点击事件，获取数据集
+    function datas(reportId){
+
+        var json="";
+        $.ajax({
+            url:"/index/test",
+            async: false,
+            dataType:"json",
+            success:function(data){
+                json=data;
+            }
+        });
+        return json;
+    }
+
+    /**
+    * 初始化设置nicepage组件    v1.0
+    *-------------------------------------------------------------
+    * 进行数据组装,与layui交互进行元素渲染
+    *-------------------------------------------------------------
+    * @param    {string}  table     table的div id
+    * @param    {string}  bar     底部分页的div id
+    * @param    {int}  limit     每页默认行数
+    * @param    {string}  color     底部分页的颜色
+    * @param    {array}  layout     底部分页的布局,具体可参考layui api
+    *
+    * @date     2018-10-19
+    * @author
+    */
+    $(function () {
+        //通过点击事件取得json字符串
+        $("#look").click(function (){
+            var reportId = $("#aaa").val();
+            /*var cc =aa(reportId);//从后台获de table 的列名,截取为字符串数组
+            var nameList = cc.split(",");//table的列名
+            var widthList=new Array(nameList.length);//列宽
+            for(i in widthList){
+                widthList[i] = 200;
+            }*/
+            var json=datas(reportId);
+            layui.use("laypage",function(){
+                var a=layui.laypage;a.render({
+                    elem:nicePage1.bar,
+                    limit:nicePage1.limt,
+                    theme:nicePage1.color,
+                    count:json.length,
+                    layout:nicePage1.layout,
+                    /*<![CDATA[*/
+                    jump:function(b){
+                        document.getElementById(nicePage1.table).innerHTML=function(){
+                            var c=[nicePage1.returnHtml(nameList,widthList)],
+                                d=nicePage1.returnList(json).concat().splice(b.curr*b.limit-b.limit,b.limit);
+                            layui.each(d,function(e,g){
+                                var f=nicePage1.returnTable(g);c.push(f)
+                            });
+
+                            c.push(" </tbody></table></br>");
+
+                            return c.join("")
+                        }()
+                    }
+                    /*]]>*/
+                })
+            })
+        })
+        nicePage1.setCfg({
+            table: 'table',
+            bar: 'pageBar',
+            limit: 20,
+            color: '#1E9FFF',
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip']
+        })//初始化完成
+    });
+
+
+</script>
+
+<!--点击浏览加载数据-->
+<script th:inline="javascript" type="text/javascript">
+
+</script>
+
+<!--加载工具栏-->
+<script th:inline="javascript" type="text/javascript">
+    var toolbar = [{
+        text:'刷新',
+        iconCls:'icon-save',
+        handler:function(){
+            //刷新table
+                var reportId = $("#aaa").val();
+                //alert(">>>" + reportId);
+                //任何需要执行的js特效
+                $.ajax({
+                    url:"/index/getTabData",
+                    data:{"reportId":reportId},
+                    dataType:"json",
+                    success:function(data){
+                        $("#dg").datagrid("loadData", data.rows);  //动态取数据
+                    }
+                })
+        }
+    }];
+</script>
+<!--加载表格-->
+<script th:inline="javascript" type="text/javascript">
+
+    $(function() {
+        //初始dtagrid
+
+        var reportId = $("#aaa").val();
+        //alert(">>>" + reportId);
+        //任何需要执行的js特效
+        $.ajax({
+            url:"/index/getTabData",
+            data:{"reportId":reportId},
+            dataType:"json",
+            success:function(data){
+                $("#dg").datagrid("loadData", data.rows);  //动态取数据
+            }
+        })
+    })
+
+    //编辑状态列
+    function  stat(val,row){
+        //  alert(row.endTime+"dsd");
+        /*<![CDATA[*/
+        if(row.state=="select"){
+            return '请等待'
+        }
+        if(row.state=="over"){
+            return '完成'
+        }
+        /*]]>*/
+        return '完成'
+    }
+
+
+    //给最后一列(查看excel)添加超链接效果
+    function  go(val,row){
+      //  alert(row.endTime+"dsd");
+        /*<![CDATA[*/
+        if(!row.requestUrl){
+            return '<span>请等待</span>  '
+        }
+        /*]]>*/
+        return '<a href="#" onclick="constructionManager(\'' + row.requestUrl+ '\')">查看</a>  '
+
+    }
+
+    function aa(){
+        alert("下载未完成，不能查看")
+    }
+
+    function constructionManager(type){
+
+        var aaa=type+""
+        window.location.href=aaa;
+    }
+
+
+    //定义一个刷新方法
+    function renovate(){
+        //刷新table
+        var reportId = $("#aaa").val();
+        //alert(">>>" + reportId);
+        //任何需要执行的js特效
+        $.ajax({
+            url:"/index/getTabData",
+            data:{"reportId":reportId},
+            dataType:"json",
+            success:function(data){
+                $("#dg").datagrid("loadData", data.rows);  //动态取数据
+            }
+        })
+    }
+</script>
+<!--工具栏点击事件-->
+<script th:inline="javascript" type="text/javascript">
+
+        //初始dtagrid
+        $("#ref").click(function(){
+            var reportId = $("#aaa").val();
+            //alert(">>>" + reportId);
+            //任何需要执行的js特效
+            $.ajax({
+                url:"/index/getTabData",
+                data:{"reportId":reportId},
+                dataType:"json",
+                success:function(data){
+                    $("#dg").datagrid("loadData", data.rows);  //动态取数据
+                }
+            })
+
+        });
+
+
+
+</script>
+
+</html>

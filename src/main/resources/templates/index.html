@@ -2,44 +2,70 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8"/>
-    <title>click</title>
+    <title>生成报表</title>
 
 
     <link rel="stylesheet" type="text/css" href="/css/easyui.css" />
     <link rel="stylesheet" type="text/css" href="/css/icon.css"/>
     <link rel="stylesheet" type="text/css" href="/css/demo.css"/>
+    <style>
+        /*不给选中的行添加高亮*/
+        .datagrid-row-selected{
+            background: #FFFFFF;/*自定义颜色*/
+        }
+    </style>
 
 
     <script type="text/javascript" src="/js/jquery.min.js"></script>
     <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
-    <script type="text/javascript" src="/js/jquery.fileDownload.js"></script>
 </head>
 <body>
 
-<form enctype="multipart/form-data"  id="frm">
-<div >
-  <!--  <input type="hidden" value="0" th:value="${tas.tableName}"  class="ipt" id="eee"></input>-->
-    <table th:id="'dd'+${iterStat.count}"   class="easyui-datagrid" th:title="${tas.tabName}"  style="width:300px;height:180px"
-           th:each="tas,iterStat : ${lbs}"
-           data-options="rownumbers:true,singleSelect:false,collapsible:true,url:'',method:'get',collapsed:true,fitColumns:true">
-        <input type="hidden" th:value="${iterStat.size}" id="inp"/>
-        <input type="hidden" th:value="${tas.tabName}" th:id="'tab1'+${iterStat.count}"/>
-        <thead>
-            <th data-options="field:'ck',checkbox:true"></th>
-            <th data-options="field:'field'">选择条件</th>
-            <th data-options="field:'name'">显示字段</th>
-        </thead>
-        <tbody>
-            <tr th:each="tt,iterStat:${tas.calList}">
+<form>
+    <div >
+
+        <input class="easyui-textbox" style="width:550px;height:32px" data-options="prompt:'输入报表名'" id="eee" />
+
+        <table th:id="'dd'+${iterStat.count}"   class="easyui-datagrid" th:title="${tas.showName}"  style="width:550px;height:250px"
+               th:each="tas,iterStat : ${lbs}"
+               data-options="rownumbers:true,singleSelect:false,collapsible:true,url:''
+           ,method:'get',collapsed:true,fitColumns:true"
+        >
+            <input type="hidden" th:value="${iterStat.size}" id="inp"/>
+            <input type="hidden" th:value="${tas.tabName}" th:id="'tab1'+${iterStat.count}"/>
+            <thead>
+                <th data-options="field:'ck',checkbox:true"></th>
+                <th data-options="field:'field'">选择显示条件</th>
+                <th data-options="field:'name'">显示字段</th>
+                <th data-options="field:'status'">选择过滤条件</th>
+                <th data-options="field:'wheredetail'">条件取值类型</th>
+            </thead>
+            <tbody>
+            <tr th:each="tt,iterState1:${tas.calList}">
                 <td data-options="field:'ck',checkbox:true"></td>
                 <td th:text="${tt.field}" ></td>
                 <td th:text="${tt.fieldMeans}" ></td>
+                <td>
+                    <input th:id="'rad'+${iterStat.count}" type="hidden" th:value="${iterState1.size}" />
+                    <input th:name="'sds'+${iterStat.count}+${iterState1.count}" th:value="${tas.tabName}+'.'+${tt.field}" type="radio"/>是
+                    <input th:name="'sds'+${iterStat.count}+${iterState1.count}" value="null" type="radio" checked="checked"/>否
+                </td>
+                <td>
+                    <select  th:name="'wds'+${iterStat.count}+${iterState1.count}">
+                        <option value="">请选择</option>
+                        <option value="=">等于</option>
+                        <option value="&lt;=">小于等于</option>
+                        <option value=">=">大于等于</option>
+                        <option value="in">模糊查询</option>
+                    </select>
+                </td>
             </tr>
-        </tbody>
+            </tbody>
 
-    </table>
-    <br/>
-    <input type="button" value="获取选中字段" id="btn" />
+            <!--  <input type="button" th:value="${tas.tableName}" name="name" class="rrr" onclick="ggg(this.value)"/>-->
+        </table>
+        <br/>
+        <input type="button" value="获取选中字段" id="btn" />
 
     </div>
 </form>
@@ -51,6 +77,13 @@
 <script th:inline="javascript" type="text/javascript">
 
     $(function(){
+
+        //选择功能设置
+        $(".easyui-datagrid").datagrid({
+            selectOnCheck:true,
+            checkOnSelect:false
+        });
+
         var ids = [];
         var str = "";//字段名
         var strtab = "";//表名
@@ -64,11 +97,11 @@
             //alert(cols);
             /*<![CDATA[*/
             for(var j=1;j < cols;j++){
-                var rows = $("#"+"dd"+j).datagrid('getSelections');
+                var rows = $("#"+"dd"+j).datagrid('getChecked');
                 var tabname = "";
                 if(rows.length>0){
-                     tabname= $("#tab1"+j).val();
-                     strtab += tabname + ",";
+                    tabname= $("#tab1"+j).val();
+                    strtab += tabname + ",";
                 }
 
                 //alert("rows");
@@ -85,38 +118,74 @@
             }
             /*]]>*/
             strtab = strtab.substring(0,strtab.length-1);
-          //  alert(ids.join(','));
-          //  alert("tabname:"+strtab);
-          //  alert("str:"+str);
-          //  alert("fields:"+strLabels);
+            //  alert(ids.join(','));
+            //alert("tabname:"+strtab);
+            //alert("str:"+str);
+            // alert("title:"+strTitle);
+            // alert("strfield:"+strfields);
+            ////////////////////////////////////////////////////////////
+            /**
+             *获取选中行的radio的值
+             */
+            var strwhere ="";//作为条件字段的集合
+            var whereDetail = "";//条件字段的取值类型
+            //获得表的数量
+            var tabes = parseInt($("#inp").val());
+            //遍历每张表获得表中行的数量
+            /*<![CDATA[*/
+            for(var k=1;k<=tabes;k++){
+                var tabrowNo = parseInt($("#rad"+k).val());
+                //alert("当前表的行数:"+tabrowNo);
+                //遍历每行,取radio的值
+                for(var m=1;m<=tabrowNo;m++){
+                    var radss = $("input[name='sds"+k+""+m+"']:checked").val();
+                    var whe = $("select[name='wds"+k+""+m+"'] option:selected").val();
+                    if(radss!="null"){
+                        strwhere += radss+",";
+                        whereDetail += whe+",";
+                    }
+                    //alert("第"+m+"行"+"的选中的值为:   "+radss);
 
-            var url= "/load/spit";
-            $.fileDownload(url,{
-                httpMethod: 'POST',
-               data:{"str":str,"strtab":strtab,"strLabels":strLabels},
-                prepareCallback:function(url){
-                    alert("下载开始，请稍等！");
-                   // common.layer.loading();
-                },
-                successCallback:function(url){
-
-                    alert('下载成功！');
-                },
-                failCallback: function (html, url) {
-                    alert("导出失败，未知的异常。");
                 }
-            });
+            }
+            /*]]>*/
+            strwhere = strwhere.substring(0,strwhere.length-1);
+           //alert("sql条件字段的集合:   "+strwhere);
+           //alert("sql条件:   "+whereDetail);
 
+
+            //获得者自定义报表名
+            var reportname = $("#eee").val();
+            //alert("报表名为:"+reportname);
+
+            //////////////////////////////////////////////////////////////
+            if(str==null || str==""){
+                //console.log("选择查询字段")
+                alert("要选择字段");
+            }else{
+                $.ajax({
+                    url:"/load/spit",
+                    data:{"str":str,"strtab":strtab,"strLabels":strLabels,"strwhere":strwhere,"reportname":reportname,"whereDetail":whereDetail},
+                    type:"post",
+                    dataType:"text",
+                    async : false,
+                    success:function(data){
+
+                        if(data == "0000"){
+                            alert("数据上传成功");
+                            window.location.href = "/load/det";
+                        }else{
+                            alert(data);
+                        }
+                    }
+                })
+            }
 
         })
     })
 
 
 </script>
-
-
-
-
 
 
 </html>

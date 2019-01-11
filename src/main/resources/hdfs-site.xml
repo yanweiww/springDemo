@@ -8,11 +8,11 @@
   </property>
   <property>
     <name>dfs.namenode.servicerpc-address</name>
-    <value>VM200-11:8022</value>
+    <value>VM250-240:8022</value>
   </property>
   <property>
     <name>dfs.https.address</name>
-    <value>VM200-11:50470</value>
+    <value>VM250-240:50470</value>
   </property>
   <property>
     <name>dfs.https.port</name>
@@ -20,11 +20,11 @@
   </property>
   <property>
     <name>dfs.namenode.http-address</name>
-    <value>VM200-11:50070</value>
+    <value>VM250-240:50070</value>
   </property>
   <property>
     <name>dfs.replication</name>
-    <value>3</value>
+    <value>1</value>
   </property>
   <property>
     <name>dfs.blocksize</name>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Basic Layout - jQuery EasyUI Demo</title>
+    <link rel="stylesheet" type="text/css" href="/css/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="/css/icon.css" />
+    <link rel="stylesheet" type="text/css" href="/css/demo.css" />
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
+    <style>
+        a:link{color:black;}
+        a:visited{color:black;}
+        a:hover{color:black;}
+        a:active{color:black;}
+    </style>
+
+</head>
+<body>
+<div class="easyui-layout" style="width:100%; height:718px;">
+    <div data-options="region:'west',split:true" title="表名" style="width:305px;">
+        <div th:each="RpReportName,reportStat:${RpReportNames}" id="fatherId">
+           <!-- &lt;!&ndash;保存表名&ndash;&gt;-->
+            <input type="hidden" th:value="${RpReportName.reportId}" th:id="'hidden'+${reportStat.count}" />
+           <!-- &lt;!&ndash;保存表的总数&ndash;&gt;-->
+            <input type="hidden" th:value="${reportStat.size}" class="reportSize" />
+            <!--&lt;!&ndash;展示表名&ndash;&gt;-->
+            <a th:id="'reportName'+${reportStat.count}" th:text="${RpReportName.reportName}" href="#" style="text-decoration:none;"></a>
+        </div>
+    </div>
+    <div style="position: absolute; left: 191px; right: 20px; ">
+
+    </div>
+    <div data-options="region:'center',title:'Main Title',iconCls:'icon-ok'" id="iframeId">
+
+    </div>
+
+</div>
+</body>
+<script th:inline="javascript" type="text/javascript">
+    $(function () {
+     var reportSize = parseInt($(".reportSize").val());
+        /*<![CDATA[*/
+     for (var i = 1; i < reportSize + 1; i++){
+     //获取表名称
+     var reportId = parseInt($("#hidden"+i).val());
+     //alert(reportId+"  bbbb");
+
+     toClick(reportId);
+     }
+        /*]]>*/
+     function toClick(rid) {
+     var url1 = "/index/getAllQueryFields?reportId="+rid;
+     //给每张表添加点击事件
+     $("#reportName"+i).click({"url1":url1},function (event) {
+     var reportId = event.data.url1;
+        //alert(reportId + " vvv");
+     $("#iframeId").html('<iframe src="'+reportId+'" scrolling = "no"  width="100%" height="99.5%" name="right" />');
+
+        /* $("#iframeId").append($('<iframe src="/index/getAllQueryFields?reportId='+rid+'"  scrolling="no"  width="100%" height="99.8%" name="right" />'));*/
+
+             })
+     }
+     });
+
+</script>
+</html>

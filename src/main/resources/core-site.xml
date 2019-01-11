@@ -4,16 +4,16 @@
 <configuration>
   <property>
     <name>fs.defaultFS</name>
-    <value>hdfs://VM200-11:8020</value>
+    <value>hdfs://VM250-240:8020</value>
   </property>
   <property>
     <name>fs.trash.interval</name>
     <value>1</value>
   </property>
- <!-- <property>
+  <property>
     <name>io.compression.codecs</name>
     <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec,org.apache.hadoop.io.compress.Lz4Codec</value>
-  </property>-->
+  </property>
   <property>
     <name>hadoop.security.authentication</name>
     <value>simple</value>
@@ -110,13 +110,13 @@
     <name>hadoop.security.instrumentation.requires.admin</name>
     <value>false</value>
   </property>
-  <property>
+ <!-- <property>
     <name>net.topology.script.file.name</name>
     <value>/etc/hadoop/conf.cloudera.yarn/topology.py</value>
-  </property>
+  </property>-->
   <property>
     <name>io.file.buffer.size</name>
-    <value>65536</value>
+    <value>131072</value>
   </property>
   <property>
     <name>hadoop.ssl.enabled</name>

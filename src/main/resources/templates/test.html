@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>云收藏 </title>
+
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.fileDownload.js"></script>
+
+</head>
+<body>
+<form>
+        <input type="button" value="点击下载" id="btn" />
+</form>
+</body>
+
+<script th:inline="javascript" type="text/javascript">
+
+    $(function(){
+        $("#btn").click(function(){
+            $.ajax({
+                url:"/load/downLoad",
+                type:"post",
+                dataType:"text",
+                async : false,
+                success:function(data){
+
+                }
+            })
+        })
+
+
+    })
+
+
+</script>
+
+
+</html>
