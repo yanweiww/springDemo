@@ -102,7 +102,7 @@ private int idd=0;
 
             return "product";
         }
-        return "wang";
+        return "nulltable";
     }
 
     @RequestMapping("/getTabData")

@@ -249,7 +249,8 @@ public class TestServiceImpl implements TestService {
         List<Map<String,Object>> list = new ArrayList<>();
         String table_string = testMapper.getAllTableFields(reportId);
         //获取自定义字段
-        List<Map<String,String>> expres = testMapper.getExpressions(reportId);
+        List<ExpressionField> expres = testMapper.getExpressions(reportId);
+
         if (table_string != null){
             String[] tabs = table_string.split(",");
             //遍历取字段
@@ -262,6 +263,39 @@ public class TestServiceImpl implements TestService {
                 map.put("fileAndMeans",files);
                 //System.out.println(testMapper.selectTabName(tabs[i])+":"+tabs[i]);
                 list.add(map);
+            }
+            for (int j = 0; j < expres.size(); j++) {
+                //转化字段类型
+                String fieldTypeStr = expres.get(j).getFieldType();
+                if ("1".equals(fieldTypeStr)) {
+                    expres.get(j).setFieldType("展现字段");
+                }else if ("0".equals(fieldTypeStr)) {
+                    expres.get(j).setFieldType("过滤字段");
+                }else {
+                    expres.get(j).setFieldType("--点击选择--");
+                }
+                //转化取值类型
+                String whereDetailStr = expres.get(j).getWhereDetail();
+                System.out.println(whereDetailStr);
+                switch (whereDetailStr) {
+                    case "<":
+                        expres.get(j).setWhereDetail("小于(<)");
+                        break;
+                    case ">":
+                        expres.get(j).setWhereDetail("大于(>)");
+                        break;
+                    case "=":
+                        expres.get(j).setWhereDetail("等于(=)");
+                        break;
+                    case "<=":
+                        expres.get(j).setWhereDetail("小于等于(<=)");
+                        break;
+                    case ">=":
+                        expres.get(j).setWhereDetail("大于等于(>=)");
+                        break;
+                    default:
+                        expres.get(j).setWhereDetail("--点击选择--");
+                }
             }
             m.put("fieldList",list);
             m.put("expreList",expres);
@@ -282,10 +316,29 @@ public class TestServiceImpl implements TestService {
                 expressionField.setParentId(reportId);
                 expressionField.setSign("否");
                 expressionField.setType("text");
-                expressionField.setWhereDetail("=");
                 String[] strings = appendSplits[i].split(":");
                 expressionField.setMeanField(strings[0]);
                 expressionField.setExpressionField(strings[1]);
+                expressionField.setFieldType(strings[2]);
+                switch (strings[3]) {
+                    case "1":
+                        expressionField.setWhereDetail("<");
+                        break;
+                    case "2":
+                        expressionField.setWhereDetail(">");
+                        break;
+                    case "3":
+                        expressionField.setWhereDetail("=");
+                        break;
+                    case "4":
+                        expressionField.setWhereDetail("<=");
+                        break;
+                    case "5":
+                        expressionField.setWhereDetail(">=");
+                        break;
+                    default:
+                        expressionField.setWhereDetail("");
+                }
                 testMapper.insertExpression(expressionField);
             }
         }
@@ -298,6 +351,26 @@ public class TestServiceImpl implements TestService {
                 expressionField.setFieldId(Integer.valueOf(strings[0]));
                 expressionField.setMeanField(strings[1]);
                 expressionField.setExpressionField(strings[2]);
+                expressionField.setFieldType(strings[3]);
+                String whereType = "";
+                switch (strings[4]) {
+                    case "1":
+                        whereType = "<";
+                        break;
+                    case "2":
+                        whereType = ">";
+                        break;
+                    case "3":
+                        whereType = "=";
+                        break;
+                    case "4":
+                        whereType = "<=";
+                        break;
+                    case "5":
+                        whereType = ">=";
+                        break;
+                }
+                expressionField.setWhereDetail(whereType);
                 testMapper.updateExpression(expressionField);
             }
         }

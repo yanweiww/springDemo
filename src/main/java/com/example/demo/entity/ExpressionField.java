@@ -40,4 +40,9 @@ public class ExpressionField {
      *whereDetail
      */
     private String whereDetail;
+
+    /**
+     *fieldType
+     */
+    private String fieldType;
 }

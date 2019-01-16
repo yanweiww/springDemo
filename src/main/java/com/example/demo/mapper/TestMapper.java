@@ -126,7 +126,7 @@ public interface TestMapper {
      * 插入自定义的字段公式
      * @param expressionField
      */
-    @Insert("insert into rp_report_expression values (null,#{parentId},#{expressionField},#{sign},#{type},#{meanField},#{whereDetail})")
+    @Insert("insert into rp_report_expression values (null,#{parentId},#{expressionField},#{sign},#{type},#{meanField},#{whereDetail},#{fieldType})")
     void insertExpression(ExpressionField expressionField);
 
     /**
@@ -134,19 +134,21 @@ public interface TestMapper {
      * @param reportId
      * @return
      */
-    @Select({"select id,mean_field,expression_field from rp_report_expression where parent_id = #{reportId}"})
+    @Select({"select id,mean_field,expression_field,where_detail,field_type from rp_report_expression where parent_id = #{reportId}"})
     @Results({
             @Result(property = "fieldId",column = "id"),
             @Result(property = "meanField",column = "mean_field"),
-            @Result(property = "expressionField",column = "expression_field")
+            @Result(property = "expressionField",column = "expression_field"),
+            @Result(property = "whereDetail",column = "where_detail"),
+            @Result(property = "fieldType",column = "field_type")
     })
-    List<Map<String, String>> getExpressions(Integer reportId);
+    List<ExpressionField> getExpressions(Integer reportId);
 
     /**
      * 更新自定义字段
      * @param expressionField
      */
-    @Update({"update rp_report_expression set mean_field = #{meanField} , expression_field= #{expressionField}  where id = #{fieldId}"})
+    @Update({"update rp_report_expression set mean_field=#{meanField},expression_field=#{expressionField},where_detail=#{whereDetail},field_type=#{fieldType} where id = #{fieldId}"})
     void updateExpression(ExpressionField expressionField);
 
     /**
