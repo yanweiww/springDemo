@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/css/tag.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/css/icon.css">
+    <link rel="stylesheet" type="text/css" href="/css/demo.css">
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/js/tag.js"></script>
+</head>
+
+<script type="text/javascript">
+    $(function () {
+        $("#editFilles").click(function () {
+            //获取当前表的id
+            var reportId = $("#hiddenId").val();
+            //获取input里面的值
+            var aaa = $('form').serialize();
+            //序列化中文时之所以乱码是因为.serialize()调用了encodeURLComponent方法将数据编码了
+            //原因：.serialize()自动调用了encodeURIComponent方法将数据编码了
+            //解决方法：调用decodeURIComponent(XXX,true);将数据解码
+            var whereFields = decodeURIComponent(aaa, true); //关键点
+            console.log(whereFields);
+            $.ajax({
+                url: "/index/getQuerySql",
+                data: {
+                    "reportId": reportId,
+                    "whereFields": whereFields
+                },
+                dataType: "text",
+                success: function (res) {
+                    //alert(res)
+                }
+            });
+        })
+    })
+</script>
+
+<body>
+<div style="text-align: center;margin-top: 200px">
+    <h1>根本就没数据好吧！<img src="../static/img/liuhan.jpg" style="width: 50px;height: 50px"></h1>
+</div>
+
+</body>
+</html>

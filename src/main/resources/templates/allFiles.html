@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="/css/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/icon.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/demo.css"/>
+    <link rel="stylesheet" href="/css/bootstrap.css"/>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/js/tag.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+</head>
+<style>
+
+    .drag-item {
+        list-style-type: circle;
+        display: block;
+        padding: 5px;
+        border: 1px solid #ccc;
+        margin: 2px;
+        width: 210px;
+        background: #fafafa;
+        color: #444;
+    }
+
+    .wang {
+        float: left;
+    }
+
+    /*设置tr内容居中*/
+    tr {
+        text-align: center; /** 设置水平方向居中 */
+        vertical-align: middle /** 设置垂直方向居中 */
+    }
+
+    td {
+        text-align: center; /** 设置水平方向居中 */
+        vertical-align: middle /** 设置垂直方向居中 */
+    }
+
+    /*隐藏输入框的边框,设置内容字体大小*/
+    input[name^='zhi'] {
+        border-width: 0;
+        font-size: 15px;
+    }
+
+    textarea[name^='kai'] {
+        border-width: 0;
+        font-size: 15px;
+    }
+
+    /*设置默认值的字体*/
+    input[name^='zhi']::-webkit-input-placeholder {
+        font-size: 15px;
+        color: silver;
+    }
+
+    input[name='Izhi'] {
+        border-width: 0;
+        font-size: 15px;
+    }
+
+    textarea[name='Ikai'] {
+        border-width: 0;
+        font-size: 15px;
+    }
+
+    /*设置默认值的字体*/
+    input[name='Izhi']::-webkit-input-placeholder {
+        font-size: 15px;
+        color: silver;
+    }
+
+    a[name='tda']:link {
+        color: red;
+    }
+
+    a[name='tda']:visited {
+        color: red;
+    }
+
+    a[name='tda']:hover {
+        color: black;
+    }
+
+    a[name='tda']:active {
+        color: red;
+    }
+
+
+    a[name='Itda']:link {
+        color: dodgerblue;
+    }
+
+    a[name='Itda']:visited {
+        color: dodgerblue;
+    }
+
+    a[name='Itda']:hover {
+        color: black;
+    }
+
+    a[name='Itda']:active {
+        color: dodgerblue;
+    }
+
+    /*去掉下划线*/
+    a {
+        text-decoration: none;
+    }
+
+    .expres {
+        float: right;
+    }
+</style>
+<script>
+    /*$(function () {
+        /!*拖拽功能*!/
+        var indicator = $('<div class="indicator">></div>').appendTo('body');
+        $('.drag-item').draggable({
+            revert: true,//如果设置为 true，拖动结束后元素将返回它的开始位置。
+            deltaX: 0,
+            deltaY: 0,
+            disabled: false,//true:不可拖动
+            axis: "v" //"v":纵向   "h":横向
+        }).droppable({
+            onDragOver: function (e, source) {
+                indicator.css({
+                    display: 'block',
+                    left: $(this).offset().left - 10,
+                    top: $(this).offset().top + $(this).outerHeight() - 5
+                });
+            },
+            onDragLeave: function (e, source) {
+                indicator.hide();
+            },
+            onDrop: function (e, source) {
+                $(source).insertAfter(this);
+                indicator.hide();
+            }
+        });
+    });*/
+</script>
+
+
+<script type="text/javascript">
+    $(function () {
+        //禁用提交按钮
+        $("#subbtnId").linkbutton("disable");
+        $("#subbtnId").attr("title", "没有可提交项");
+
+        //设置不可拖动//
+        $('.drag-item').draggable({
+            disabled: true
+        });
+
+        var flag = 0;
+        //点击自定义公式按钮
+        $("#editFilles").click(function () {
+            flag++;
+            //添加一行编辑表格
+            /*<![CDATA[*/
+            $("tbody").append('<tr id="appendTr'+flag+'">\n' +
+                '        <td style="vertical-align: middle">\n' +
+                '            <input type="checkbox" id="checkId' + flag + '"/>\n' +
+                '            <input type="hidden" name="hidName' + flag + '" id="hidId' + flag + '" value="0"/>\n' +
+                '        </td>\n' +
+                '        <td style="vertical-align: middle">\n' +
+                '            <input type="text" id="fieldMeans' + flag + '" name="zhi' + flag + '" placeholder="点击编辑"\n' +
+                '                   style="width: 100%;height:40px;text-align: center;"/>\n' +
+                '        </td>\n' +
+                '        <td style="vertical-align: middle">\n' +
+                '            <textarea  id="fieldExpression' + flag + '" readonly="readonly" name="kai' + flag + '" \n' +
+                '                   style="width: 100%;height:40px;margin-bottom: -2px;text-align: left"></textarea>\n' +
+                '            <input type="hidden" name="hiddenInput' + flag + '" id="hiddenInput' + flag + '"/>\n' +
+                '        </td>\n' +
+                '        <td style="vertical-align: middle">\n' +
+                '            <a href="#" name="tda" id="deletebtn' + flag + '"><b> 删除 </b></a>\n' +
+                '        </td>\n' +
+                '    </tr>');
+
+            /*]]>*/
+            //点击删除按钮
+            $(document).on("click", "#deletebtn" + flag, function () {
+                var ressult = window.confirm('确定删除？');
+                if (ressult) {
+                    $(this).parent().parent().remove();
+                }
+            });
+
+
+            //复选框change事件
+            $(document).on("change", "#checkId" + flag, function () {
+                var ischecked = $(this).is(":checked");
+                //alert(ischecked);
+                if (ischecked === true) {
+                    $(this).parent().find("input[name^='hidName']").val("1")
+                } else {
+                    $(this).parent().find("input[name^='hidName']").val("0")
+                }
+                //添加的行数
+                var hidds = $("input[name^='hidName']");
+                //每次改变的时候判断里面有没有选中的，如果有，则取消提交按钮禁用
+                /*<![CDATA[*/
+                for (var i = 0; i < $(hidds).length; i++) {
+                    //alert($(hidds[i]).val());
+                    if ($(hidds[i]).val() === "1") {
+                        $("#subbtnId").linkbutton("enable");
+                        $("#subbtnId").removeAttr("title");
+                        //此处一定要结束循环，因为只要有一个选中就开启提交按钮
+                        break;
+                    } else {
+                        $("#subbtnId").linkbutton("disable");
+                        $("#subbtnId").attr("title", "没有可提交项");
+                    }
+                }
+                /*]]>*/
+            });
+
+
+            //当点击文本框时，设置其他的值为0，自己的值为1
+            $("#fieldExpression" + flag).click(function () {
+                var IhiddenInp = $("input[name='IhiddenInput']");
+                var hidds = $("input[name^='hiddenInput']");
+                // var fieldExpressions = $("textarea[name^='kai']");
+                // var fieldExpression = $("textarea[name='Ikai']");
+                /*<![CDATA[*/
+                if ($(IhiddenInp).length > 0) {
+                    for (var j = 0; j < $(IhiddenInp).length; j++) {
+                        $(IhiddenInp[j]).val("0")
+                        //$(fieldExpressions[j]).val("0")
+                    }
+                }
+                if ($(hidds).length > 0) {
+                    for (var k = 0; k < $(hidds).length; k++) {
+                        $(hidds[k]).val("0")
+                        //$(fieldExpression[k]).val("0")
+                    }
+                }
+                /*]]>*/
+                $(this).parent().find("input[name^='hiddenInput']").val("1")
+                //$(this).parent().find("textarea").val("1")
+            });
+        });
+
+/************************************************************************************************/
+        //给每行添加一个唯一的UUID以便做删除和更新操作
+        /*<![CDATA[*/
+        /*var rand = $("input[name^='randomInp']");
+        for (var i = 0; i < $(rand).length ; i++) {
+            var uuid = Math.random().toString(36).substr(0);
+            $(rand[i]).val(uuid)
+        }*/
+        /*]]>*/
+        //获取遍历次数
+        var sizeNum = parseInt($("input[name='sizeNum']").val());
+        //点击重置
+        /*<![CDATA[*/
+        for (var l = 1; l < sizeNum+1; l++) {
+            //删除按钮点击事件
+            $("#Ideletebtn"+l).click(function () {
+                var ressult = window.confirm('确定删除？');
+                if (ressult) {
+                    //获取删除行的id
+                    var IfieldId = parseInt($(this).parent().parent().find("input[name='IfieldId']").val());
+                    //alert($(this).parent().parent().find("input[name='IfieldId']").val())
+                    //后台删除
+                    $.ajax({
+                        url: "/index/deleteFieldExpression",
+                        type: "get",
+                        data: {"IfieldId":IfieldId},
+                        dataType: "text",
+                        success: function (res) {
+                            //删除页面数据
+                            alert("删除成功！");
+                        }
+                    });
+                    $(this).parent().parent().remove();
+                }
+            });
+            /*]]>*/
+            $("#Iresetbtn"+l).click(function () {
+                //去掉输入框只读
+                var checkInp = $(this).parent().parent().find("td").find("input[name='Iwang']");
+                var fieldInp = $(this).parent().parent().find("td").find("input[name='Izhi']");
+                var expreInp = $(this).parent().parent().find("td").find("textarea[name='Ikai']");
+                checkInp.removeAttr("disabled");
+                fieldInp.removeAttr("disabled");
+                expreInp.removeAttr("disabled");
+                expreInp.attr("readonly","readonly");
+                //置空文本
+                expreInp.text("");
+                expreInp.focus();
+                //将textarea的隐藏域设置为1，其他的为0
+                var IhiddenInp = $("input[name='IhiddenInput']");
+                var hidds = $("input[name^='hiddenInput']");
+                // var fieldExpressions = $("textarea[name^='kai']");
+                // var fieldExpression = $("textarea[name='Ikai']");
+                /*<![CDATA[*/
+                if ($(IhiddenInp).length > 0) {
+                    for (var j = 0; j < $(IhiddenInp).length; j++) {
+                        $(IhiddenInp[j]).val("0")
+                        //$(fieldExpression[j]).val("0")
+                    }
+                }
+                if ($(hidds).length > 0) {
+                    for (var k = 0; k < $(hidds).length; k++) {
+                        $(hidds[k]).val("0")
+                        //$(fieldExpressions[k]).val("0")
+                    }
+                }
+                /*]]>*/
+                $(this).parent().parent().find("td").find("input[name='IhiddenInput']").val("1");
+                //$(this).parent().parent().find("td").find("textarea").val("1");
+            })
+        }
+
+
+        //获取表的数量
+        var tableNum = parseInt($(".tableInput").val());
+        /*<![CDATA[*/
+        for (var i = 1; i < tableNum + 1; i++) {
+            //获取表名
+            var tableName = $("#tableeditNamesInputId" + i).val();
+            //获取每张表的字段数
+            var fileNum = parseInt($(".fieldInput" + i).val());
+            for (var j = 1; j < fileNum + 1; j++) {
+                //获取点击的字段对象
+                var fieldNameObj1 = document.getElementById(i + "liId" + j);
+                var fieldNameObj = $(fieldNameObj1);
+                //获取点击的字段名称
+                var fieldName1 = document.getElementById(i + "fieldInput" + j);
+                var fieldName = $(fieldName1).val();
+                //给每个字段添加点击事件
+                toClick(fieldNameObj, tableName, fieldName);
+            }
+        }
+        /*]]>*/
+        function toClick(fieldNameObj, tableName, fieldName) {
+            fieldNameObj.click({
+                "tableName": tableName,
+                "fieldName": fieldName
+            }, function (event) {
+                var tabName = event.data.tableName;
+                var fieName = event.data.fieldName;
+                //拼接字段
+                var tableAndField = tabName + "." + fieName;
+                //append字段
+                //这两个变量必须放到点击事件里面，否则未定义
+                var fieldExpressions = $("textarea[name^='kai']");
+                var hidds = $("input[name^='hiddenInput']");
+                //数据库加载字段
+                var IhiddenInp = $("input[name='IhiddenInput']");
+                var IfieldExpression = $("textarea[name='Ikai']");
+                //alert($(hidds).length);
+                /*<![CDATA[*/
+                if ($(hidds).length > 0) {
+                    for (var i = 0; i < $(hidds).length; i++) {
+                        //点击之后判断哪个文本框处于待编辑状态
+                        if ($(hidds[i]).val() === "1") {
+                            $(fieldExpressions[i]).append(tableAndField);
+                        }
+                    }
+                }
+                if ($(IhiddenInp).length > 0) {
+                    for (var k = 0; k < $(IhiddenInp).length; k++) {
+                        //点击之后判断哪个文本框处于待编辑状态
+                        if ($(IhiddenInp[k]).val() === "1") {
+                            $(IfieldExpression[k]).append(tableAndField);
+                            //alert($(IfieldExpression[k]).text())
+                        }
+                    }
+                }
+
+            })
+        }
+
+
+        //复选框改变事件
+        for (var m = 1; m < sizeNum+1; m++) {
+            $(document).on("change","#IcheckId"+m,(function () {
+                var ischecked = $(this).is(":checked");
+                //alert(ischecked);
+                //判断是否选中，选中就值1，否值0
+                if (ischecked === true) {
+                    $(this).parent().find("input[name='IhidName']").val("1")
+                } else {
+                    $(this).parent().find("input[name='IhidName']").val("0")
+                }
+                //添加的行数
+                var hidds = $("input[name^='hidName']");
+                var IhiddenInp = $("input[name='IhidName']");
+                var bool = false;
+                //每次改变的时候判断里面有没有选中的，如果有，则取消提交按钮禁用
+                for (var i = 0; i < $(hidds).length; i++) {
+                    if ($(hidds[i]).val() === "1") {
+                        $("#subbtnId").linkbutton("enable");
+                        $("#subbtnId").removeAttr("title");
+                        bool = true;
+                        //此处一定要结束循环，因为只要有一个选中就开启提交按钮
+                        break;
+                    } else {
+                        $("#subbtnId").linkbutton("disable");
+                        $("#subbtnId").attr("title", "没有可提交项");
+                    }
+                }
+                if (bool === false) {
+                    //说明append项里面没有选中的复选框，接着筛选渲染项
+                    for (var j = 0; j < $(IhiddenInp).length; j++) {
+                        if ($(IhiddenInp[j]).val() === "1") {
+                            $("#subbtnId").linkbutton("enable");
+                            $("#subbtnId").removeAttr("title");
+                            //此处一定要结束循环，因为只要有一个选中就开启提交按钮
+                            break;
+                        } else {
+                            $("#subbtnId").linkbutton("disable");
+                            $("#subbtnId").attr("title", "没有可提交项");
+                        }
+                    }
+                }
+            }))
+        }
+
+
+        //计算符号点击事件
+        function appendFunc(el){
+            var IhiddenInp = $("input[name='IhiddenInput']");
+            var IfieldExpression = $("textarea[name='Ikai']");
+            var fieldExpressions = $("textarea[name^='kai']");
+            var hidds = $("input[name^='hiddenInput']");
+            if ($(hidds).length > 0) {
+                for (var i = 0; i < $(hidds).length; i++) {
+                    //点击之后判断哪个文本框处于待编辑状态
+                    if ($(hidds[i]).val() === "1") {
+                        $(fieldExpressions[i]).append(el)
+                    }
+                }
+            }
+            if ($(IhiddenInp).length > 0) {
+                for (var k = 0; k < $(IhiddenInp).length; k++) {
+                    //点击之后判断哪个文本框处于待编辑状态
+                    if ($(IhiddenInp[k]).val() === "1") {
+                        $(IfieldExpression[k]).append(el);
+                    }
+                }
+                /*]]>*/
+            }
+        }
+        $("#jia").click(function () {
+            var el = " + ";
+            appendFunc(el);
+        });
+        $("#jian").click(function () {
+            var el = " - ";
+            appendFunc(el);
+        });
+        $("#cheng").click(function () {
+            var el = " × ";
+            appendFunc(el);
+        });
+        $("#chu").click(function () {
+            var el = " ÷ ";
+            appendFunc(el);
+        });
+        $("#zuokuohao").click(function () {
+            var el = " ( ";
+            appendFunc(el);
+        });
+        $("#youkuohao").click(function () {
+            var el = " ) ";
+            appendFunc(el);
+        });
+
+
+    });
+
+    //提交按钮事件
+    function subExpression() {
+        //获取所有的自定义字段的别名和公式对象集合
+        var fieldExpressions = $("textarea[name^='kai']");
+        var fieldMeans = $("input[name^='zhi']");
+        var IfieldExpressions = $("textarea[name='Ikai']");
+        var IfieldMeans = $("input[name='Izhi']");
+        //获取append和渲染的条数
+        var hidds = $("input[name^='hidName']");
+        var IhiddenInp = $("input[name='IhidName']");
+        //获取保存行id的隐藏域对象集合
+        var IfieldId = $("input[name='IfieldId']");
+        //定义一个数组保存提交的数据
+        var allAppendExpression = [];
+        var allUpdateExpression = [];
+        //添加append数据
+        /*<![CDATA[*/
+        if($(hidds).length > 0){
+            for (var i = 0; i < $(hidds).length; i++) {
+                //点击之后判断哪些复选框为选中状态
+                if ($(hidds[i]).val() === "1") {
+                    //拼接自定义字段
+                    var fileAndExpression = $(fieldMeans[i]).val() + ":" + $(fieldExpressions[i]).val();
+                    //添加到数组
+                    allAppendExpression.push(fileAndExpression);
+                }
+            }
+        }
+        //添加修改后的渲染数据
+        if ($(IhiddenInp).length > 0) {
+            for (var j = 0; j < $(IhiddenInp).length; j++) {
+                //点击之后判断哪些复选框为选中状态
+                if ($(IhiddenInp[j]).val() === "1") {
+                    //拼接自定义字段
+                    var IfileAndExpression = $(IfieldId[j]).val() + ":" + $(IfieldMeans[j]).val() + ":" + $(IfieldExpressions[j]).val();
+                    //alert(IfileAndExpression);
+                    //添加到数组
+                    allUpdateExpression.push(IfileAndExpression);
+                }
+            }
+        }
+
+        /*]]>*/
+        var allAppendExpressions = allAppendExpression.toString();
+        var allUpdateExpressions = allUpdateExpression.toString();
+        var reportId = $("#hiddenReportId").val();
+        $.ajax({
+            url: "/index/insertExpression",
+            type: "get",
+            data: {
+                "allAppendExpressions": allAppendExpressions,
+                "allUpdateExpressions": allUpdateExpressions,
+                "reportId": reportId
+            },
+            dataType: "text",
+            success: function (res) {
+                alert("插入数据成功!")
+            }
+        });
+    }
+</script>
+
+<body>
+<!--保存该表的id用于提交数据时候使用-->
+<input type="hidden" id="hiddenReportId" th:value="${reportId}"/>
+<!--overflow-x:auto和overflow-x:scroll都会显示横向滚动条，但文本没有超出范围时scroll始终显示滚动条-->
+<div id="tablecontent" class="easyui-panel" title="报表所有字段" style="width:100%;height:auto;overflow-x:auto;overflow-y: hidden">
+    <div style="width: 10000000px">
+        <div style="margin:10px 10px;height: auto;" class="wang" th:each="tableAndField,tabState:${tableAndFields}">
+            <!--设置隐藏域保存表个数-->
+            <input type="hidden" class="tableInput" th:value="${tabState.size}"/>
+            <input type="hidden" th:id="'tableeditNamesInputId'+${tabState.count}"
+                   th:value="${tableAndField.tableName}"/>
+            <a href="#" class="easyui-linkbutton" th:title="${tableAndField.tableName}"
+               style="border:2px solid #84C1FF;margin-left: 16px;width: 180px" name="zhi" disabled="true">
+                <span style="color: black;font-weight:bold" th:text="${tableAndField.tableMeanName}">表名</span>
+            </a>
+            <!--由于此处li标签里面设置隐藏的input标签无效（原因不详），故将其与li设置为同级，这就必须将循环放到ul上，但并不影响页面布局-->
+            <ul style="margin:0;padding:0;margin-left:14px;text-align: center"
+                th:each="fileAndMean,fieldState:${tableAndField.fileAndMeans}">
+                <a class="drag-item" style="width: 180px" th:title="${fileAndMean.field}"
+                    th:text="${fileAndMean.fieldMeans}" th:id="${tabState.count}+'liId'+${fieldState.count}"
+                    th:value="${fileAndMean.field}">字段
+                </a>
+                <!--设置隐藏域保存字段数-->
+                <input type="hidden" th:class="'fieldInput'+${tabState.count}" th:value="${fieldState.size}"/>
+                <input type="hidden" th:id="${tabState.count}+'fieldInput'+${fieldState.count}"
+                       th:value="${fileAndMean.field}"/>
+            </ul>
+        </div>
+    </div>
+</div>
+<div style="padding: 3px;" class="easyui-panel">
+    <div id="bottonBox" style="margin-bottom: 1px;">
+        <a href="javascript:void(0)" id="editFilles" format="xlsx" class="easyui-linkbutton"
+           data-options="iconCls:'icon-edit',plain:true,formId:'#conditionForm'" style="width:120px;">自定义公式</a>
+        <a href="#" class="easyui-linkbutton expres" style="width: 50px;margin-left: 5px" id="youkuohao"><b> ) </b></a>
+        <a href="#" class="easyui-linkbutton expres" style="width: 50px;margin-left: 5px" id="zuokuohao"><b> ( </b></a>
+        <a href="#" class="easyui-linkbutton expres" style="width: 50px;margin-left: 5px" id="chu"><b> ÷ </b></a>
+        <a href="#" class="easyui-linkbutton expres" style="width: 50px;margin-left: 5px" id="cheng"><b> × </b></a>
+        <a href="#" class="easyui-linkbutton expres" style="width: 50px;margin-left: 5px" id="jian"><b> - </b></a>
+        <a href="#" class="easyui-linkbutton expres" style="width: 50px;margin-left: 5px" id="jia"><b> + </b></a>
+    </div>
+</div>
+<div style="margin-top: 20px"></div>
+<div class="easyui-panel" title="自定义字段运算" style="width: 100%;height: 320px;" data-options="collapsible:false" id="111">
+    <table class="table table-bordered " id="tableId" style="margin-bottom: 0">
+        <thead>
+        <tr>
+            <th style="width: 8%;text-align: center">是否启用</th>
+            <th style="width: 12%;text-align: center">别名</th>
+            <th style="width: 70%;text-align: center">定义公式</th>
+            <th style="width: 10%;text-align: center">操作</th>
+        </tr>
+        </thead>
+        <tbody id="bodyId">
+            <tr th:each="expression,expreState:${expreList}" th:id="${expression.fieldId}">
+                <input type="hidden" th:value="${expreState.size}" th:name="sizeNum"/>
+                <!--保存行的id-->
+                <input type="hidden" th:value="${expression.fieldId}" th:name="IfieldId"/>
+                <td style="vertical-align: middle">
+                    <input type="checkbox" th:id="'IcheckId'+${expreState.count}" name="Iwang"  disabled="disabled" title=""/>
+                    <input type="hidden" name="IhidName" value="0"/>
+                </td>
+                <td style="vertical-align: middle">
+                    <input type="text" th:id="'IfieldMeans'+${expreState.count}" name="Izhi" placeholder="点击编辑" disabled="disabled"
+                           th:value="${expression.meanField}" style="width: 100%;height:40px;text-align: center;"/>
+                </td>
+                <td style="vertical-align: middle">
+                    <textarea th:id="'IfieldExpression'+${expreState.count}"  name="Ikai" disabled="disabled"
+                              th:text="${expression.expressionField}" style="width: 100%;height:40px;text-align: left" title=""></textarea>
+                    <input type="hidden" name="IhiddenInput"/>
+                </td>
+                <td style="vertical-align: middle">
+                    <a href="#" name="Itda" th:id="'Iresetbtn'+${expreState.count}"><b> 重置 </b></a>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="#" name="tda" th:id="'Ideletebtn'+${expreState.count}"><b> 删除 </b></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div style="margin-bottom: 0;text-align: right">
+        <a href="#" class="easyui-linkbutton" style="width:10%;border: #84C1FF solid 1px;" id="subbtnId" onclick="subExpression()">提&nbsp;&nbsp;&nbsp;交</a>
+    </div>
+</div>
+</body>
+</html>

@@ -190,11 +190,11 @@
        return bb;
     }
     //通过点击事件，获取数据集
-    function datas(reportId){
-
+    function datas(reportId,whereFields){
         var json="";
         $.ajax({
             url:"/index/test",
+            data:{"reportId":reportId,"whereFields":whereFields},
             async: false,
             dataType:"json",
             success:function(data){
@@ -222,13 +222,14 @@
         //通过点击事件取得json字符串
         $("#look").click(function (){
             var reportId = $("#aaa").val();
-            /*var cc =aa(reportId);//从后台获de table 的列名,截取为字符串数组
-            var nameList = cc.split(",");//table的列名
-            var widthList=new Array(nameList.length);//列宽
-            for(i in widthList){
-                widthList[i] = 200;
-            }*/
-            var json=datas(reportId);
+            //获取input里面的值
+            var aaa = $('form').serialize();
+            //序列化中文时之所以乱码是因为.serialize()调用了encodeURLComponent方法将数据编码了
+            //原因：.serialize()自动调用了encodeURIComponent方法将数据编码了
+            //解决方法：调用decodeURIComponent(XXX,true);将数据解码
+            var whereFields = decodeURIComponent(aaa,true); //关键点
+
+            var json=datas(reportId,whereFields);
             layui.use("laypage",function(){
                 var a=layui.laypage;a.render({
                     elem:nicePage1.bar,

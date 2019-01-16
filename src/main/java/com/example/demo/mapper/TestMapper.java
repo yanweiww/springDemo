@@ -1,11 +1,9 @@
 package com.example.demo.mapper;
 
+import com.example.demo.entity.ExpressionField;
 import com.example.demo.entity.RpReportName;
 import com.example.demo.entity.TableRelation;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 import java.util.Map;
@@ -94,4 +92,81 @@ public interface TestMapper {
             @Result(property = "fieldTwo" ,column = "field_two")
     })
     List<TableRelation> getSql(String tableTwo);
+
+
+    /**
+     * 根据id获取报表所有关联的表
+     * @param reportId
+     * @return
+     */
+    @Select({"select table_string from rp_report_name where id = #{reportId}"})
+    String getAllTableFields(@Param("reportId") Integer reportId);
+
+    /**
+     * 根据表名获取该表的所有字段
+     * @param tab
+     * @return
+     */
+    @Select({"select field,field_means from rp_field_means where table_name = #{tableName}"})
+    @Results({
+            @Result(property = "field",column = "field"),
+            @Result(property = "fieldMeans",column = "field_means")
+    })
+    List<Map<String, String>> getFilesByTableName(@Param("tableName") String tab);
+
+    /**
+     * 根据表名获取表的别名
+     * @param tab
+     * @return
+     */
+    @Select({"select show_field_means from rp_field_means where table_name = #{tableName} group by show_field_means"})
+    String selectTabName(String tab);
+
+    /**
+     * 插入自定义的字段公式
+     * @param expressionField
+     */
+    @Insert("insert into rp_report_expression values (null,#{parentId},#{expressionField},#{sign},#{type},#{meanField},#{whereDetail})")
+    void insertExpression(ExpressionField expressionField);
+
+    /**
+     * 查询自定义表达式
+     * @param reportId
+     * @return
+     */
+    @Select({"select id,mean_field,expression_field from rp_report_expression where parent_id = #{reportId}"})
+    @Results({
+            @Result(property = "fieldId",column = "id"),
+            @Result(property = "meanField",column = "mean_field"),
+            @Result(property = "expressionField",column = "expression_field")
+    })
+    List<Map<String, String>> getExpressions(Integer reportId);
+
+    /**
+     * 更新自定义字段
+     * @param expressionField
+     */
+    @Update({"update rp_report_expression set mean_field = #{meanField} , expression_field= #{expressionField}  where id = #{fieldId}"})
+    void updateExpression(ExpressionField expressionField);
+
+    /**
+     * 删除自定义字段
+     * @param ifieldId
+     * @return
+     */
+    @Delete({"delete from rp_report_expression where id = #{ifieldId}"})
+    void deleteFieldExpression(@Param("ifieldId") Integer ifieldId);
+
+    /**
+     * 根据id查询自定义公式表里面是否有数据
+     */
+    @Select("select id,parent_id,expression_field,sign,type,mean_field,where_detail from rp_report_expression where parent_id =#{id} ")
+    @Results({
+            @Result(property = "fieldId",column = "id"),
+            @Result(property = "parentId",column = "parent_id"),
+            @Result(property = "expressionField",column = "expression_field"),
+            @Result(property = "meanField",column = "mean_field"),
+            @Result(property = "whereDetail",column = "where_detail")
+    })
+    List<ExpressionField> getExression(@Param("id") int id);
 }

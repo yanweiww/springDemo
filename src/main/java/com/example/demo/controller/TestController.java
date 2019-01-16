@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.commons.ExcelExportUtil;
+import com.example.demo.entity.ExpressionField;
 import com.example.demo.entity.RpReportName;
 import com.example.demo.entity.RpReportQuery;
 import com.example.demo.entity.ScheduleTask;
@@ -170,8 +171,13 @@ private int idd=0;
      */
     @RequestMapping("/test")
     @ResponseBody
-    public List<Map<String,Object>> getTest(){
-        String sql="select " +
+    public List<Map<String,Object>> getTest(@RequestParam("reportId") Integer reportId,
+                                            @RequestParam("whereFields") String whereFields){
+        //得到条件
+        Map<String,Object> maps = testService.getQuerySql(reportId,whereFields);
+        String sql=maps.get("sql").toString();
+
+      /*  String sql="select " +
                 "com_organization_dsj.name,person_info_dsj.name " +
                 "from  " +
                 "loan_base_dsj  " +
@@ -182,8 +188,11 @@ private int idd=0;
         String fields[] ={"com_organization_dsj.name","person_info_dsj.name"};
 
         List<Map<String,Object>> lists=sparkTestService.sparkDemo(sql,fields,67);
-        System.out.println(">>>>>>>>>>>>"+lists.size()+"<<<<<<<<<<<<<<<<<<");
-        return lists;
+        System.out.println(">>>>>>>>>>>>"+lists.size()+"<<<<<<<<<<<<<<<<<<");*/
+
+        //return lists;
+        System.out.println(sql);
+        return null;
     }
 
 
@@ -243,6 +252,61 @@ private int idd=0;
         return testService.getFTPUrl(tabName,inputStream);
 
     }*/
+
+
+    /**
+     * 加载表名称
+     *
+     * @param model
+     * @return
+     */
+    @RequestMapping("/getExp")
+    public String getExp(Model model) {
+        List<RpReportName> RpReportNames = testService.getTabs();
+        model.addAttribute("RpReportNames", RpReportNames);
+        return "chooseReport";
+    }
+
+    /**
+     * 点击表名时获取所有表的所有字段
+     * @param reportId
+     */
+    @RequestMapping("/getAllTableFields")
+    public String getAllTableFields(Model model, Integer reportId) {
+        Map<String, Object> m = testService.getAllTableFields(reportId);
+        if (m.size() != 0) {
+            model.addAttribute("tableAndFields", m.get("fieldList"));
+            model.addAttribute("expreList", m.get("expreList"));
+            model.addAttribute("reportId", reportId);
+            return "allFiles";
+        }
+        return "nulltable";
+    }
+
+
+    /**
+     * 添加自定义字段到数据库
+     * @param allAppendExpressions
+     * @return
+     */
+    @RequestMapping("/insertExpression")
+    @ResponseBody
+    public String insertExpression(String allAppendExpressions,String allUpdateExpressions,Integer reportId) {
+        testService.insertExpression(allAppendExpressions,allUpdateExpressions,reportId);
+        return "yes";
+    }
+
+    /**
+     * 删除自定义字段
+     * @param IfieldId
+     * @return
+     */
+    @RequestMapping("/deleteFieldExpression")
+    @ResponseBody
+    public String deleteFieldExpression(Integer IfieldId) {
+        testService.deleteFieldExpression(IfieldId);
+        return "yes";
+    }
 
 
 }

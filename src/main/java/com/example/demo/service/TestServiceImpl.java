@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.commons.FTPConfigBean;
 import com.example.demo.commons.FTPUtil;
+import com.example.demo.entity.ExpressionField;
 import com.example.demo.entity.RpReportName;
 import com.example.demo.entity.TableRelation;
 import com.example.demo.mapper.TestMapper;
@@ -116,6 +117,17 @@ public class TestServiceImpl implements TestService {
     }
 
     /**
+     * 查询自定义公式表中是否有数据
+     * @param id
+     * @return
+     */
+    @Override
+    public List<ExpressionField> getExression(int id) {
+        List<ExpressionField> result = testMapper.getExression(id);
+        return result;
+    }
+
+    /**
      * 根据id查询表字段拼接sql
      * @param reportId
      * @param whereFields
@@ -132,11 +144,31 @@ public class TestServiceImpl implements TestService {
         //获取并切割whereString
         String whereString = rpReportName.getWhereString();
         String[] whereStrings = whereString.split(",");
+        //查询自定义公式中是否有数据
+        List<ExpressionField> datas = getExression(reportId);
+        //如果有，取出公式和别名
+        String fiedStr= "";
+        if(datas.size()>0){
+            fiedStr= "";
+            //遍历集合
+            for(ExpressionField s:datas){
+                /**
+                 * 把多个公式拼接成一个字符串，
+                 * 如果公式是查询字段就拼接到rp_report_name
+                 * 表查询字段和别名字段中
+                 *如果是条件字段，就把公式拼接到条件字段中
+                 * 并在 rp_relation_query表中插入数据
+                 */
 
+                fiedStr += s.getExpressionField() +" ,";
+            }
+
+        }
 
         //拼接sql
         String str = "select ";
         //取出全部字段
+      //  str += fiedStr;
         for(String field:sqlStrings){
             str += field + ",";
         }
@@ -208,6 +240,72 @@ public class TestServiceImpl implements TestService {
         }
         System.out.println(ftpFullPath);
         return ftpFullPath;
+    }
+
+
+    @Override
+    public Map<String, Object> getAllTableFields(Integer reportId) {
+        Map<String,Object> m = new HashMap<>();
+        List<Map<String,Object>> list = new ArrayList<>();
+        String table_string = testMapper.getAllTableFields(reportId);
+        //获取自定义字段
+        List<Map<String,String>> expres = testMapper.getExpressions(reportId);
+        if (table_string != null){
+            String[] tabs = table_string.split(",");
+            //遍历取字段
+            for (int i = 0; i < tabs.length; i++) {
+                Map<String,Object> map = new HashMap<>();
+                //通过表名获取该表的所有字段
+                List<Map<String,String>> files = testMapper.getFilesByTableName(tabs[i]);
+                map.put("tableMeanName",testMapper.selectTabName(tabs[i])+"表");
+                map.put("tableName",tabs[i]);
+                map.put("fileAndMeans",files);
+                //System.out.println(testMapper.selectTabName(tabs[i])+":"+tabs[i]);
+                list.add(map);
+            }
+            m.put("fieldList",list);
+            m.put("expreList",expres);
+            return m;
+        }
+        return null;
+    }
+
+
+    @Override
+    public void insertExpression(String allAppendExpressions, String allUpdateExpressions, Integer reportId) {
+        System.out.println(allAppendExpressions);
+        //插入append数据
+        if (!StringUtils.isEmptyOrWhitespace(allAppendExpressions)) {
+            String[] appendSplits= allAppendExpressions.split(",");
+            for (int i = 0; i < appendSplits.length; i++) {
+                ExpressionField expressionField = new ExpressionField();
+                expressionField.setParentId(reportId);
+                expressionField.setSign("否");
+                expressionField.setType("text");
+                expressionField.setWhereDetail("=");
+                String[] strings = appendSplits[i].split(":");
+                expressionField.setMeanField(strings[0]);
+                expressionField.setExpressionField(strings[1]);
+                testMapper.insertExpression(expressionField);
+            }
+        }
+        //修改原数据
+        if (!StringUtils.isEmptyOrWhitespace(allUpdateExpressions)) {
+            String[] updateSplits = allUpdateExpressions.split(",");
+            for (int j = 0; j < updateSplits.length ; j++) {
+                ExpressionField expressionField = new ExpressionField();
+                String[] strings = updateSplits[j].split(":");
+                expressionField.setFieldId(Integer.valueOf(strings[0]));
+                expressionField.setMeanField(strings[1]);
+                expressionField.setExpressionField(strings[2]);
+                testMapper.updateExpression(expressionField);
+            }
+        }
+    }
+
+    @Override
+    public void deleteFieldExpression(Integer ifieldId) {
+        testMapper.deleteFieldExpression(ifieldId);
     }
 }
 
