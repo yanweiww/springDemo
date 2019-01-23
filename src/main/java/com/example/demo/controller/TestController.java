@@ -38,7 +38,7 @@ public class TestController {
     @Autowired
     SparkTestService sparkTestService;
     @Autowired
-    AddToReportService addToReportService;//、、ssss
+    AddToReportService addToReportService;
     @Autowired
     AddToTableService addToTableService;
 
@@ -91,17 +91,15 @@ private int idd=0;
      */
     @RequestMapping("/getAllQueryFields")
     public String getAllQueryFields(Model model,Integer reportId){
-        System.out.println(reportId);
+        //System.out.println(reportId);
         idd=reportId;
         List<Map<String, Object>> allQueryFields = testService.getAllQueryFields(reportId);
-        if(allQueryFields!=null){
-            //获取页面查询字段
-
-            model.addAttribute("allQueryFields",allQueryFields);
-            model.addAttribute("reportId",reportId);
-
-            return "product";
-        }
+            if(allQueryFields.size() != 0){
+                //获取页面查询字段
+                model.addAttribute("allQueryFields",allQueryFields);
+                model.addAttribute("reportId",reportId);
+                return "product";
+            }
         return "nulltable";
     }
 
@@ -111,7 +109,7 @@ private int idd=0;
         Map<String,Object> datas=new HashMap<>();
         if(!StringUtils.isNullOrEmpty(reportId)){
             datas=addToTableService.getTabList(Integer.parseInt(reportId));
-            System.out.println(datas);
+            //System.out.println(datas);
             return datas;
         }
         return null;
@@ -303,8 +301,8 @@ private int idd=0;
      */
     @RequestMapping("/deleteFieldExpression")
     @ResponseBody
-    public String deleteFieldExpression(Integer IfieldId) {
-        testService.deleteFieldExpression(IfieldId);
+    public String deleteFieldExpression(Integer IfieldId ,Integer reportId) {
+        testService.deleteFieldExpression(IfieldId,reportId);
         return "yes";
     }
 

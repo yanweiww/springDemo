@@ -3,8 +3,10 @@ package com.example.demo.service;
 import com.example.demo.commons.FTPConfigBean;
 import com.example.demo.commons.FTPUtil;
 import com.example.demo.entity.ExpressionField;
+import com.example.demo.entity.RelationQuery;
 import com.example.demo.entity.RpReportName;
 import com.example.demo.entity.TableRelation;
+import com.example.demo.mapper.EditReportMapper;
 import com.example.demo.mapper.TestMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,9 @@ public class TestServiceImpl implements TestService {
 
     @Autowired
     private TestMapper testMapper;
+
+    @Autowired
+    private EditReportMapper editReportMapper;
 
     @Autowired
     private FTPConfigBean ftpConfigBean;
@@ -108,6 +113,7 @@ public class TestServiceImpl implements TestService {
                 map.put("fieldString", results.get(i).get("fieldString"));
                 map.put("fieldType", results.get(i).get("fieldType"));
                 map.put("showField", results.get(i).get("showField"));
+                map.put("whereDetail", results.get(i).get("whereDetail"));
                 map.put("whereString", split[i]);
                 allQueryFields.add(map);
             }
@@ -147,11 +153,11 @@ public class TestServiceImpl implements TestService {
         //查询自定义公式中是否有数据
         List<ExpressionField> datas = getExression(reportId);
         //如果有，取出公式和别名
-        String fiedStr= "";
+        String expressionStr= "";
         if(datas.size()>0){
-            fiedStr= "";
+            expressionStr= "";
             //遍历集合
-            for(ExpressionField s:datas){
+            for(ExpressionField expressionField:datas){
                 /**
                  * 把多个公式拼接成一个字符串，
                  * 如果公式是查询字段就拼接到rp_report_name
@@ -159,16 +165,14 @@ public class TestServiceImpl implements TestService {
                  *如果是条件字段，就把公式拼接到条件字段中
                  * 并在 rp_relation_query表中插入数据
                  */
-
-                fiedStr += s.getExpressionField() +" ,";
+                expressionStr += expressionField.getExpressionField() +" ,";
             }
-
         }
 
         //拼接sql
         String str = "select ";
         //取出全部字段
-      //  str += fiedStr;
+        str += expressionStr;
         for(String field:sqlStrings){
             str += field + ",";
         }
@@ -184,18 +188,19 @@ public class TestServiceImpl implements TestService {
                         + " ";
             }
         }
-
         //拼接where字段
         //=111& , =& , =333& , =
         String whereStr  = " where ";
         String lastWhere = " 1 = 1 ";
         String str1 = whereFields.replace("whereFieldStrings="," ").replace("&",",");
-        System.out.println(str1);
+        //System.out.println(str1);
         String[] strings = str1.split(",");
         int flag = 0;
         for (int i = 0; i < strings.length; i++ ){
             if(!StringUtils.isEmptyOrWhitespace(strings[i])){
-                whereStr = whereStr + whereStrings[i] + "='"+strings[i].trim() +"'" + " and ";
+                //根据报表id和字段名称查询取值类型
+                String whereDetail = testMapper.selectWhereD(reportId,whereStrings[i]);
+                whereStr = whereStr + whereStrings[i] + whereDetail + strings[i].trim() + " and ";
                 flag += 1;
             }
         }
@@ -205,7 +210,7 @@ public class TestServiceImpl implements TestService {
         }
         str = str + whereStr + lastWhere;
         str += "    limit  100000  ";
-
+        System.out.println(str);
 
         Map<String,Object> map=new HashMap<>();
         map.put("sql",str);
@@ -269,10 +274,13 @@ public class TestServiceImpl implements TestService {
                 String fieldTypeStr = expres.get(j).getFieldType();
                 if ("1".equals(fieldTypeStr)) {
                     expres.get(j).setFieldType("展现字段");
+                    expres.get(j).setFieldTypeValue("1");
                 }else if ("0".equals(fieldTypeStr)) {
                     expres.get(j).setFieldType("过滤字段");
+                    expres.get(j).setFieldTypeValue("0");
                 }else {
                     expres.get(j).setFieldType("--点击选择--");
+                    expres.get(j).setFieldTypeValue("null");
                 }
                 //转化取值类型
                 String whereDetailStr = expres.get(j).getWhereDetail();
@@ -307,12 +315,13 @@ public class TestServiceImpl implements TestService {
 
     @Override
     public void insertExpression(String allAppendExpressions, String allUpdateExpressions, Integer reportId) {
-        System.out.println(allAppendExpressions);
+        //System.out.println(allAppendExpressions);
         //插入append数据
         if (!StringUtils.isEmptyOrWhitespace(allAppendExpressions)) {
             String[] appendSplits= allAppendExpressions.split(",");
             for (int i = 0; i < appendSplits.length; i++) {
                 ExpressionField expressionField = new ExpressionField();
+                RelationQuery relationQuery = new RelationQuery();
                 expressionField.setParentId(reportId);
                 expressionField.setSign("否");
                 expressionField.setType("text");
@@ -323,23 +332,60 @@ public class TestServiceImpl implements TestService {
                 switch (strings[3]) {
                     case "1":
                         expressionField.setWhereDetail("<");
+                        relationQuery.setWhereDetail("<");
                         break;
                     case "2":
                         expressionField.setWhereDetail(">");
+                        relationQuery.setWhereDetail(">");
                         break;
                     case "3":
                         expressionField.setWhereDetail("=");
+                        relationQuery.setWhereDetail("=");
                         break;
                     case "4":
                         expressionField.setWhereDetail("<=");
+                        relationQuery.setWhereDetail("<=");
                         break;
                     case "5":
                         expressionField.setWhereDetail(">=");
+                        relationQuery.setWhereDetail(">=");
                         break;
                     default:
                         expressionField.setWhereDetail("");
+                        relationQuery.setWhereDetail("");
                 }
                 testMapper.insertExpression(expressionField);
+
+                //插入数据到rp_relation_query
+                String[] stringss = appendSplits[i].split(":");
+                //如果是条件字段就插入，否则不更改
+                if ("0".equals(stringss[2])) {
+                    relationQuery.setParentId(reportId);
+                    relationQuery.setSign("否");
+                    relationQuery.setType("text");
+                    relationQuery.setFieldMeans(stringss[0]);
+                    relationQuery.setFieldString(stringss[1]);
+                    testMapper.insertExpressionToQuery(relationQuery);
+                }
+                //插入数据到rp_report_name
+                Map<String,String> whereAndSqlString = editReportMapper.selectWhereAndSqlString(reportId);
+                String whereString = whereAndSqlString.get("whereString");
+                String sqlString = whereAndSqlString.get("sqlString");
+                String lebleString = whereAndSqlString.get("lebleString");
+                RpReportName rpReportName = new RpReportName();
+                rpReportName.setReportId(reportId);
+                //判断field_type是什么类型字段
+                if("1".equals(strings[2])) {
+                    rpReportName.setSqlString(sqlString + "," + strings[1]);
+                    rpReportName.setLebleString(lebleString + "," + strings[0]);
+                    rpReportName.setWhereString(whereString);
+                }
+                if("0".equals(strings[2])) {
+                    rpReportName.setWhereString(whereString + "," + strings[1]);
+                    rpReportName.setSqlString(sqlString);
+                    rpReportName.setLebleString(lebleString);
+                }
+                editReportMapper.updateWhereAndSqlString(rpReportName);
             }
         }
         //修改原数据
@@ -348,6 +394,14 @@ public class TestServiceImpl implements TestService {
             for (int j = 0; j < updateSplits.length ; j++) {
                 ExpressionField expressionField = new ExpressionField();
                 String[] strings = updateSplits[j].split(":");
+                //先通过每个expressionid获取对应修改前的数据
+                ExpressionField field = testMapper.getExpressionByFieldId(Integer.valueOf(strings[0]));
+
+                //System.out.println(field.toString());
+                //修改rp_relation_query的数据
+                expressionField.setParentId(reportId);
+                expressionField.setSign(field.getSign());
+                expressionField.setType(field.getType());
                 expressionField.setFieldId(Integer.valueOf(strings[0]));
                 expressionField.setMeanField(strings[1]);
                 expressionField.setExpressionField(strings[2]);
@@ -371,14 +425,137 @@ public class TestServiceImpl implements TestService {
                         break;
                 }
                 expressionField.setWhereDetail(whereType);
+                //获取rp_report_name中的字段
+                Map<String,String> whereAndSqlString = editReportMapper.selectWhereAndSqlString(reportId);
+                String sqlString = whereAndSqlString.get("sqlString");
+                String whereString = whereAndSqlString.get("whereString");
+                String lebleString = whereAndSqlString.get("lebleString");
+                //判断修改之前的字段类型
+                if ("1".equals(field.getFieldType())) {
+                    //判断field_type修改了没有
+                    if ("0".equals(strings[3])) {
+                        //更新rp_relation_query
+                        testMapper.insertExpressionToQuery2(expressionField);
+                        //更新rp_report_name
+                        String joinSqlString = replaceString(sqlString,field);
+                        String joinLebleString = replaceMeans(lebleString,field);
+                        String joinWhereString = whereString + "," + strings[2];
+                        editReportMapper.updateReportNameByJoinString(joinSqlString,joinLebleString,joinWhereString,reportId);
+                    }else if ("1".equals(strings[3])) {
+                        //更新rp_report_name
+                        String[] sqlStrings = sqlString.split(",");
+                        String[] lebleStrings = lebleString.split(",");
+                        for (int i = 0; i < sqlStrings.length; i++) {
+                            if (field.getExpressionField().equals(sqlStrings[i])) {
+                                sqlStrings[i] = strings[2];
+                            }
+                        }
+                        for (int l = 0; l < lebleStrings.length; l++) {
+                            if (field.getMeanField().equals(lebleStrings[l])) {
+                                lebleStrings[l] = strings[2];
+                            }
+                        }
+                        String joinSqlString = StringUtils.join(sqlStrings,",");
+                        String joinLebleStrings = StringUtils.join(lebleStrings,",");
+                        System.out.println(joinSqlString + "..." + joinLebleStrings);
+                        editReportMapper.updateSqlStringAndLebleString(joinSqlString,joinLebleStrings,reportId);
+                    }
+                }else if ("0".equals(field.getFieldType())) {
+                    //判断field_type修改了没有
+                    if ("0".equals(strings[3])) {
+                        //更新rp_relation_query
+                        testMapper.updateReportQuery(expressionField,field,reportId);
+                        //更新rp_report_name
+                        String[] whereStrings = whereString.split(",");
+                        for (int m = 0; m < whereStrings.length; m++) {
+                            if (field.getExpressionField().equals(whereStrings[m])) {
+                                whereStrings[m] = strings[2];
+                            }
+                        }
+                        String joinWhereString = StringUtils.join(whereStrings,",");
+                        System.out.println(joinWhereString);
+                        editReportMapper.updateWhereString(joinWhereString,reportId);
+                    }else if ("1".equals(strings[3])) {
+                        //更新rp_relation_query（直接删除表中该自定义字段）
+                        testMapper.deleteReportQuery(field,reportId);
+                        //更新rp_report_name
+                        String joinWhereString = replaceMeans(whereString,field);
+                        String joinLebleString = lebleString + "," + strings[1];
+                        String joinSqlString = sqlString + "," + strings[2];
+                        editReportMapper.updateReportNameByJoinString(joinSqlString,joinLebleString,joinWhereString,reportId);
+                    }
+                }
+                //最后更新rp_report_expression
                 testMapper.updateExpression(expressionField);
             }
         }
     }
 
     @Override
-    public void deleteFieldExpression(Integer ifieldId) {
+    public void deleteFieldExpression(Integer ifieldId, Integer reportId) {
+        //先查询field_type是否为0，是删除，否不更改
+        ExpressionField expressionField = testMapper.getExpressionByFieldId(ifieldId);
+        //查询rp_report_name表中数据
+        Map<String,String> whereAndSqlString = editReportMapper.selectWhereAndSqlString(reportId);
+        String whereString = whereAndSqlString.get("whereString");
+        String sqlString = whereAndSqlString.get("sqlString");
+        String lebleString = whereAndSqlString.get("lebleString");
+        //判断修改的自定义字段类型
+        if ("0".equals(expressionField.getFieldType())) {
+            //删除rp_relation_query中的数据
+            testMapper.deleteFromQuery(reportId,expressionField);
+            //更改rp_report_name中的where_string
+            String joinWhereString = replaceString(whereString,expressionField);
+            System.out.println(joinWhereString);
+            editReportMapper.updateWhereString(joinWhereString,reportId);
+        }else if ("1".equals(expressionField.getFieldType())) {
+            //由于rp_relation_query中没有保存展示字段，所以不需要操作rp_relation_query表
+            String joinSqlString = replaceString(sqlString,expressionField);
+            String joinLebleString = replaceMeans(lebleString,expressionField);
+            System.out.println(joinSqlString + "...." + joinLebleString);
+            editReportMapper.updateSqlStringAndLebleString(joinSqlString,joinLebleString,reportId);
+        }
+        //最后删除rp_report_expression中的数据
         testMapper.deleteFieldExpression(ifieldId);
+    }
+
+
+    /**
+     * 删除字段中的指定元素(sql_string和where_string)
+     * @param stringOfField
+     * @param expressionField
+     * @return
+     */
+    public String replaceString(String stringOfField,ExpressionField expressionField) {
+        String[] stringOfFields = stringOfField.split(",");
+        List<String> list = Arrays.asList(stringOfFields);
+        List<String> arrayList = null;
+        if (list.contains(expressionField.getExpressionField())) {
+            //将list转化为ArrayList，否则做删除添加等操作报错
+            arrayList = new ArrayList<String>(list);
+            arrayList.remove(expressionField.getExpressionField());
+        }
+        String string = String.join(",", arrayList);
+        return string;
+    }
+
+    /**
+     * 删除字段中的指定元素(leble_string)
+     * @param stringOfField
+     * @param expressionField
+     * @return
+     */
+    public String replaceMeans(String stringOfField,ExpressionField expressionField) {
+        String[] stringOfFields = stringOfField.split(",");
+        List<String> list = Arrays.asList(stringOfFields);
+        List<String> arrayList = null;
+        if (list.contains(expressionField.getMeanField())) {
+            //将list转化为ArrayList，否则做删除添加等操作报错
+            arrayList = new ArrayList<String>(list);
+            arrayList.remove(expressionField.getMeanField());
+        }
+        String string = String.join(",", arrayList);
+        return string;
     }
 }
 

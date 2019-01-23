@@ -45,4 +45,25 @@ public class ExpressionField {
      *fieldType
      */
     private String fieldType;
+
+    /**
+     *fieldTypeValue
+     */
+    private String fieldTypeValue;
+
+
+    @Override
+    public String toString() {
+        return "ExpressionField{" +
+                "fieldId=" + fieldId +
+                ", parentId=" + parentId +
+                ", expressionField='" + expressionField + '\'' +
+                ", sign='" + sign + '\'' +
+                ", type='" + type + '\'' +
+                ", meanField='" + meanField + '\'' +
+                ", whereDetail='" + whereDetail + '\'' +
+                ", fieldType='" + fieldType + '\'' +
+                ", fieldTypeValue='" + fieldTypeValue + '\'' +
+                '}';
+    }
 }

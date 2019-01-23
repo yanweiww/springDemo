@@ -53,6 +53,30 @@
                         <span th:text="${allQueryField.showField}"></span>
                         <input class="easyui-combobox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 250px;"/>
                     </td>
+
+
+
+
+
+
+
+                    <td style="width:800px;text-align: left;padding-left: 20px;" th:each="expressionField,expressionStat:${allExpressionFields}" th:if="${expressionField.type}=='text'">
+                        <span th:text="${expressionField.meanField}"></span>
+                        <input class="easyui-textbox" type="text"  name="whereFieldStrings" data-options="editable : true"  style="width: 250px;"/>
+                    </td>
+
+                    <td style="width:800px;text-align: left;" th:each="expressionField,expressionStat:${allExpressionFields}" th:if="${expressionField.type}=='date'" >
+                        <span th:text="${expressionField.meanField}"></span>
+                        <!--此处日期暂时做等号相连，只取一个值-->
+                        <!--<input class="easyui-datebox" type="text"  th:name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/> ~-->
+                        <input class="easyui-datebox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/>
+                    </td>
+
+                    <td style="width:800px;text-align: left;" th:each="expressionField,expressionStat:${allExpressionFields}" th:if="${expressionField.type}=='select'" >
+                        <span th:text="${expressionField.meanField}"></span>
+                        <input class="easyui-combobox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 250px;"/>
+                    </td>
+
                 </tr>
             </table>
             <div style="padding: 3px;" class="datagrid-toolbar">
