@@ -32,7 +32,7 @@
 <div class="easyui-panel" style="width: 100%;height:95%;"  >
     <!--保存该表的id用于提交数据时候使用-->
     <input type="hidden" id="hiddenId" th:value="${reportId}" />
-    <div id="tablecontent" class="easyui-panel" title="查询条件"  style="width: 95%;height:auto;padding-top: 5px;" >
+    <div id="tablecontent" class="easyui-panel" title="查询条件"  style="width: 99%;height:auto;padding-top: 5px;" >
         <form id="conditionForm" style="width: 100%; height: 100%;">
             <table style="height: 100%;border-spacing:10px;table-layout:fixed;">
                 <input type="hidden" th:value="${reportId}" id="aaa"/>
@@ -46,7 +46,7 @@
                         <span th:text="${allQueryField.showField}"></span>
                         <!--此处日期暂时做等号相连，只取一个值-->
                         <!--<input class="easyui-datebox" type="text"  th:name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/> ~-->
-                        <input class="easyui-datebox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/>
+                        <input class="easyui-datebox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 250px;"/>
                     </td>
 
                     <td style="width:800px;text-align: left;" th:each="allQueryField,queryStat:${allQueryFields}" th:if="${allQueryField.fieldType}=='select'" >
@@ -60,7 +60,7 @@
 
 
 
-                    <td style="width:800px;text-align: left;padding-left: 20px;" th:each="expressionField,expressionStat:${allExpressionFields}" th:if="${expressionField.type}=='text'">
+                    <td style="width:800px;text-align: left;" th:each="expressionField,expressionStat:${allExpressionFields}" th:if="${expressionField.type}=='text'">
                         <span th:text="${expressionField.meanField}"></span>
                         <input class="easyui-textbox" type="text"  name="whereFieldStrings" data-options="editable : true"  style="width: 250px;"/>
                     </td>
@@ -69,7 +69,7 @@
                         <span th:text="${expressionField.meanField}"></span>
                         <!--此处日期暂时做等号相连，只取一个值-->
                         <!--<input class="easyui-datebox" type="text"  th:name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/> ~-->
-                        <input class="easyui-datebox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 115px;"/>
+                        <input class="easyui-datebox" type="text"  name="whereFieldStrings" data-options="editable : false" style="width: 250px;"/>
                     </td>
 
                     <td style="width:800px;text-align: left;" th:each="expressionField,expressionStat:${allExpressionFields}" th:if="${expressionField.type}=='select'" >
